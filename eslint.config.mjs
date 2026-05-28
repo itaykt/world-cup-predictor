@@ -55,7 +55,8 @@ export default [
         TournamentStandings: "readonly",
         SupabaseBracket: "readonly",
         supabase: "readonly",
-        BracketView: "readonly"
+        BracketView: "readonly",
+        CelebrationEffects: "readonly"
       }
     }
   }

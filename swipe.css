@@ -811,10 +811,29 @@ kbd {
   background: var(--bg-slate-900);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 12px 10px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  text-align: center;
+}
+
+.finisher-podium .podium-number {
+  margin-bottom: 2px;
+}
+
+.finisher-podium .finisher-info {
+  text-align: center;
+  width: 100%;
+}
+
+.finisher-flag {
+  display: block;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  margin: 6px 0 4px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 
 .finisher-podium.silver {
@@ -835,16 +854,13 @@ kbd {
 .silver .podium-number { color: #9ca3af; }
 .bronze .podium-number { color: #b87333; }
 
-.finisher-info {
-  text-align: left;
-}
-
 .medal-label {
   font-size: 0.5rem;
   font-weight: 800;
   color: var(--text-muted);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
 }
 
@@ -852,9 +868,18 @@ kbd {
 .bronze .medal-label { color: #9a5f1a; }
 
 .finisher-info h3 {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
   margin-top: 1px;
+}
+
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
 }
 
 /* Quick Stats dashboard on swiped podium */

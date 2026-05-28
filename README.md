@@ -10,9 +10,10 @@ Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or
 
 | File | Description |
 |------|-------------|
-| [`swipe.html`](swipe.html) | **Only public entry** — welcome, swipe predictor, podium, bracket viewer |
+| [`swipe.html`](swipe.html) | **Main app** — welcome, swipe predictor, podium, bracket viewer |
+| [`index.html`](index.html) | Instant redirect to `swipe.html` (short root URL) |
 
-**Share this URL:** `https://itaykt.github.io/world-cup-predictor/swipe.html` — the site root (`/world-cup-predictor/`) is intentionally not a page.
+**Share either URL** (both open Swipe Cup): `…/swipe.html` or `…/` (root redirects instantly).
 
 ## Development
 
@@ -47,7 +48,7 @@ npm run ci        # lint + test (same as GitHub Actions)
 | Method | URL | Storage |
 |--------|-----|---------|
 | Hash share | `swipe.html#share=…` | None (full state in URL) |
-| Leaderboard | `swipe.html?bracket=nickname` | Supabase `brackets` table |
+| Saved prediction | `swipe.html?bracket=nickname` | Supabase `brackets` table |
 | Bracket only | `swipe.html?bracket=nick&view=bracket` | Opens group + knockout view directly |
 
 PINs are stored as SHA-256 hashes client-side before upsert. Re-submitting with the same nickname requires the correct PIN.

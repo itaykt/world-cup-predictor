@@ -129,8 +129,11 @@ const DOM = {
   // Podium UI
   finishFlag: document.getElementById("finish-flag"),
   finishName: document.getElementById("finish-name"),
+  finishSilverFlag: document.getElementById("finish-silver-flag"),
   finishSilverName: document.getElementById("finish-silver-name"),
+  finishBronzeFlag: document.getElementById("finish-bronze-flag"),
   finishBronzeName: document.getElementById("finish-bronze-name"),
+  quickUpsetTitle: document.getElementById("quick-upset-title"),
   quickUpsetMatch: document.getElementById("quick-upset-match"),
   
   btnShareResults: document.getElementById("btn-share-results"),
@@ -171,6 +174,9 @@ function initDefaultState() {
   }
   historyStack.length = 0; // Clear history
   refreshActiveMatchCache();
+  if (typeof CelebrationEffects !== "undefined") {
+    CelebrationEffects.stopCelebration();
+  }
 }
 
 function saveToLocalStorage() {
@@ -751,13 +757,18 @@ function formatUpsetLine(winnerId, loserId) {
   const winner = TEAMS_DB[winnerId];
   const loser = TEAMS_DB[loserId];
   if (!winner || !loser) return null;
-  return `${winner.flag} ${winner.name} beat ${loser.name}`;
+  return `${winner.flag} ${winner.name} beat ${loser.flag} ${loser.name}`;
 }
 
-/** Lower FIFA rank number = stronger; upset when winner's rank is worse (higher number) than loser's. */
-function findBiggestUpsetText() {
-  let biggestDiff = -1;
-  let upsetText = "No clear upsets in this bracket";
+function formatClosestLine(teamAId, teamBId) {
+  const a = TEAMS_DB[teamAId];
+  const b = TEAMS_DB[teamBId];
+  if (!a || !b) return null;
+  return `${a.flag} ${a.name} vs ${b.flag} ${b.name}`;
+}
+
+function collectPredictedMatchups() {
+  const matchups = [];
 
   GROUP_STAGE_MATCHES.forEach((m) => {
     const key = `${m.group}_${m.matchIndex}`;
@@ -768,22 +779,19 @@ function findBiggestUpsetText() {
     const sB = parseInt(score.scoreB, 10);
     const rA = TEAMS_DB[m.teamA].rank;
     const rB = TEAMS_DB[m.teamB].rank;
+    const rankGap = Math.abs(rA - rB);
 
-    if (sA > sB && rA > rB) {
-      const diff = rA - rB;
-      const line = formatUpsetLine(m.teamA, m.teamB);
-      if (line && diff > biggestDiff) {
-        biggestDiff = diff;
-        upsetText = line;
-      }
-    } else if (sB > sA && rB > rA) {
-      const diff = rB - rA;
-      const line = formatUpsetLine(m.teamB, m.teamA);
-      if (line && diff > biggestDiff) {
-        biggestDiff = diff;
-        upsetText = line;
-      }
+    if (sA === sB) {
+      matchups.push({ type: "draw", teamA: m.teamA, teamB: m.teamB, rankGap });
+      return;
     }
+
+    const winner = sA > sB ? m.teamA : m.teamB;
+    const loser = sA > sB ? m.teamB : m.teamA;
+    const rWin = TEAMS_DB[winner].rank;
+    const rLose = TEAMS_DB[loser].rank;
+    const upsetGap = rWin > rLose ? rWin - rLose : 0;
+    matchups.push({ type: "result", winner, loser, teamA: m.teamA, teamB: m.teamB, rankGap, upsetGap });
   });
 
   for (let mId = 73; mId <= 104; mId++) {
@@ -795,17 +803,65 @@ function findBiggestUpsetText() {
     const loser = pick === resolved.a ? resolved.b : resolved.a;
     const rWin = TEAMS_DB[winner].rank;
     const rLose = TEAMS_DB[loser].rank;
-    if (rWin <= rLose) continue;
-
-    const diff = rWin - rLose;
-    const line = formatUpsetLine(winner, loser);
-    if (line && diff > biggestDiff) {
-      biggestDiff = diff;
-      upsetText = line;
-    }
+    matchups.push({
+      type: "result",
+      winner,
+      loser,
+      teamA: resolved.a,
+      teamB: resolved.b,
+      rankGap: Math.abs(rWin - rLose),
+      upsetGap: rWin > rLose ? rWin - rLose : 0
+    });
   }
 
-  return upsetText;
+  return matchups;
+}
+
+/** Biggest underdog win; if none, the tightest rank gap between opponents. */
+function findPodiumMatchupHighlight() {
+  const matchups = collectPredictedMatchups();
+  if (!matchups.length) {
+    return { label: "Biggest Upset", line: "—" };
+  }
+
+  let bestUpset = null;
+  let closest = null;
+
+  matchups.forEach((m) => {
+    if (m.type === "result" && m.upsetGap > 0) {
+      if (!bestUpset || m.upsetGap > bestUpset.upsetGap) bestUpset = m;
+    }
+    if (!closest || m.rankGap < closest.rankGap) closest = m;
+  });
+
+  if (bestUpset) {
+    return {
+      label: "Biggest Upset",
+      line: formatUpsetLine(bestUpset.winner, bestUpset.loser) || "—"
+    };
+  }
+
+  if (closest.type === "draw") {
+    return {
+      label: "Closest Matchup",
+      line: formatClosestLine(closest.teamA, closest.teamB) || "—"
+    };
+  }
+
+  return {
+    label: "Closest Matchup",
+    line: formatUpsetLine(closest.winner, closest.loser) || formatClosestLine(closest.teamA, closest.teamB) || "—"
+  };
+}
+
+function updatePodiumMatchupHighlight() {
+  const { label, line } = findPodiumMatchupHighlight();
+  if (DOM.quickUpsetTitle) {
+    DOM.quickUpsetTitle.innerHTML = `<i class="fa-solid fa-bolt text-gold-glow"></i> ${label}`;
+  }
+  if (DOM.quickUpsetMatch) {
+    DOM.quickUpsetMatch.innerText = line;
+  }
 }
 
 // --- 10. CHAMPIONSHIP REVEAL & CTA ---
@@ -834,11 +890,19 @@ function revealPodiumChampionship() {
     DOM.finishFlag.innerText = champ.flag;
     DOM.finishName.innerText = champ.name.toUpperCase();
   }
-  if (runner) DOM.finishSilverName.innerText = runner.name;
-  if (third) DOM.finishBronzeName.innerText = third.name;
+  if (runner) {
+    if (DOM.finishSilverFlag) DOM.finishSilverFlag.innerText = runner.flag;
+    if (DOM.finishSilverName) DOM.finishSilverName.innerText = runner.name;
+  }
+  if (third) {
+    if (DOM.finishBronzeFlag) DOM.finishBronzeFlag.innerText = third.flag;
+    if (DOM.finishBronzeName) DOM.finishBronzeName.innerText = third.name;
+  }
 
-  if (DOM.quickUpsetMatch) {
-    DOM.quickUpsetMatch.innerText = findBiggestUpsetText();
+  updatePodiumMatchupHighlight();
+
+  if (typeof CelebrationEffects !== "undefined") {
+    CelebrationEffects.triggerPodiumCelebration();
   }
 
   // Customizations for Share/Viewer Mode
@@ -1032,7 +1096,7 @@ async function renderLeaderboard() {
 
   if (!result.brackets.length) {
     DOM.leaderboardList.innerHTML =
-      '<p class="sidebar-help-text" style="margin:8px 0 0;">No saves yet — be the first after you finish!</p>';
+      '<p class="sidebar-help-text" style="margin:8px 0 0;">No predictions yet — be the first after you finish!</p>';
     return;
   }
 
@@ -1206,7 +1270,7 @@ function bindSharedAndPodiumHandlers() {
   if (DOM.btnSaveLeaderboard) {
     DOM.btnSaveLeaderboard.addEventListener("click", () => {
       if (openSwipeSaveShareModal()) return;
-      showToast("Leaderboard save is not configured.", true);
+      showToast("Saving predictions is not configured.", true);
     });
   }
 

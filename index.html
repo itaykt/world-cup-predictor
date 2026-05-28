@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="swipe.html">
+  <meta http-equiv="refresh" content="0; url=swipe.html">
+  <title>Swipe Cup — World Cup 2026</title>
+  <script>
+    (function () {
+      var url = new URL("swipe.html", window.location.href);
+      var params = new URLSearchParams(window.location.search);
+      ["bracket", "share", "new", "start", "view"].forEach(function (key) {
+        var val = params.get(key);
+        if (val != null && val !== "") url.searchParams.set(key, val);
+      });
+      if (window.location.hash) url.hash = window.location.hash;
+      window.location.replace(url.toString());
+    })();
+  </script>
+</head>
+<body></body>
+</html>

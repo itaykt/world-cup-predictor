@@ -33,8 +33,8 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 - [ ] **manual** Repo **Settings → Pages** → Source: **Deploy from branch** → `main` → `/ (root)`
 - [ ] **manual** Wait for deploy; open your Pages URL
 - [ ] Confirm live:
-  - `https://<user>.github.io/<repo>/swipe.html` — **only** link to share (welcome → swipe)
-  - `https://<user>.github.io/<repo>/` — should **404** (no `index.html`)
+  - `https://<user>.github.io/<repo>/swipe.html` — main app (welcome → swipe)
+  - `https://<user>.github.io/<repo>/` — redirects to `swipe.html` (same app)
 - [ ] `swipe.html?bracket=<nickname>` — loads podium + **View Bracket** (read-only)
 - [ ] `swipe.html#share=<base64>` — hash share (full state in URL)
 
@@ -43,7 +43,7 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 ## Before sharing with friends
 
 - [ ] Full run on **mobile**: swipe gestures, podium, **Share Results**, **View Bracket**, **Group stage** toggle
-- [ ] Save a bracket (**Save to leaderboard** on podium); refresh Swipe welcome — **Community leaderboard** should list it
+- [ ] Save a bracket (**Save your prediction** on podium); refresh Swipe welcome — **Community predictions** should list it
 - [ ] Wrong PIN: save again with same nickname + wrong PIN → red error in modal (“Wrong PIN for this nickname…”)
 - [ ] CI passing: [![CI](https://github.com/itaykt/world-cup-predictor/actions/workflows/ci.yml/badge.svg)](https://github.com/itaykt/world-cup-predictor/actions/workflows/ci.yml) (`npm run ci` locally)
 
@@ -52,8 +52,8 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 ## Nice to do before kickoff (June 11)
 
 - [ ] Read [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) — enable Supabase API rate limits or prune spam rows
-- [ ] Submit your own bracket first so the leaderboard isn’t empty
-- [ ] Pin only `swipe.html` in your group chat (not the repo root URL)
+- [ ] Submit your own bracket first so predictions aren’t empty
+- [ ] Pin `swipe.html` or the shorter root URL in your group chat
 
 ---
 
@@ -61,7 +61,7 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 
 | What | URL |
 |------|-----|
-| Play (welcome / enter name) | `swipe.html` |
+| Play (welcome / enter name) | `swipe.html` or site root `/` |
 | View saved bracket | `swipe.html?bracket=nickname` |
 | Hash share (no DB) | `swipe.html#share=…` |
 | Bracket view only | `swipe.html?bracket=nick&view=bracket` |
