@@ -143,6 +143,9 @@ const DOM = {
   bracketViewGroups: document.getElementById("bracket-view-groups"),
   bracketViewKnockout: document.getElementById("bracket-view-knockout"),
   btnBracketToggleGroups: document.getElementById("btn-bracket-toggle-groups"),
+  leaderboardList: document.getElementById("leaderboard-list"),
+  leaderboardUnconfigured: document.getElementById("leaderboard-unconfigured"),
+  btnRefreshLeaderboard: document.getElementById("btn-refresh-leaderboard"),
   btnRestartSwipe: document.getElementById("btn-restart-swipe"),
 
   saveShareModal: document.getElementById("save-share-modal"),
@@ -1056,9 +1059,55 @@ async function tryLoadSharedOrSavedBracket() {
   return false;
 }
 
+async function renderLeaderboard() {
+  if (!DOM.leaderboardList) return;
+
+  const configured = typeof SupabaseBracket !== "undefined" && SupabaseBracket.isConfigured();
+  if (DOM.leaderboardUnconfigured) {
+    DOM.leaderboardUnconfigured.classList.toggle("hidden", configured);
+  }
+  if (!configured) {
+    DOM.leaderboardList.innerHTML = "";
+    return;
+  }
+
+  DOM.leaderboardList.innerHTML = '<p class="sidebar-help-text" style="margin:8px 0 0;">Loading…</p>';
+  const result = await SupabaseBracket.listBrackets();
+
+  if (!result.ok) {
+    DOM.leaderboardList.innerHTML = `<p class="save-share-error" style="margin:8px 0 0;">${saveShareErrorMessage(result.error)}</p>`;
+    return;
+  }
+
+  if (!result.brackets.length) {
+    DOM.leaderboardList.innerHTML =
+      '<p class="sidebar-help-text" style="margin:8px 0 0;">No saves yet — be the first after you finish!</p>';
+    return;
+  }
+
+  DOM.leaderboardList.innerHTML = "";
+  result.brackets.forEach((row) => {
+    const href = SupabaseBracket.buildSubmittedBracketUrl(row.nickname);
+    const timeLabel = row.updated_at
+      ? new Date(row.updated_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
+      : "";
+    const link = document.createElement("a");
+    link.className = "leaderboard-row";
+    link.href = href;
+    link.innerHTML = `
+      <div class="leaderboard-row-main">
+        <span class="leaderboard-nick">@${row.nickname}</span>
+        <span class="leaderboard-champ">${row.champion || "—"}</span>
+      </div>
+      <span class="leaderboard-time">${timeLabel}</span>
+    `;
+    DOM.leaderboardList.appendChild(link);
+  });
+}
+
 function saveShareErrorMessage(code) {
   const map = {
-    wrong_pin: "Wrong PIN for this nickname.",
+    wrong_pin: "Wrong PIN for this nickname. Try again or pick another nickname.",
     invalid_nickname: "Nickname must be 2–20 characters (letters, numbers, underscore).",
     invalid_pin: "PIN must be exactly 4 digits.",
     not_configured: "Online save is not configured."
@@ -1237,7 +1286,14 @@ function bindSharedAndPodiumHandlers() {
       const shareUrl =
         result.url || SupabaseBracket.buildSubmittedBracketUrl(result.nickname, window.location.href);
       showToast("Bracket saved!");
+      void renderLeaderboard();
       await performShareResults(shareUrl);
+    });
+  }
+
+  if (DOM.btnRefreshLeaderboard) {
+    DOM.btnRefreshLeaderboard.addEventListener("click", () => {
+      void renderLeaderboard();
     });
   }
 }
@@ -1249,6 +1305,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   bindSharedAndPodiumHandlers();
+  void renderLeaderboard();
 
   if (await tryLoadSharedOrSavedBracket()) {
     updateSupabaseSaveButton();

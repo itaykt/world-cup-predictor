@@ -38,5 +38,9 @@ create policy "brackets_public_update"
   using (true)
   with check (true);
 
--- Optional: allow upsert via insert … on conflict if your project uses separate policies
 grant select, insert, update on public.brackets to anon, authenticated;
+
+-- Verify policies (Dashboard → Authentication → Policies, or Database → brackets → RLS):
+--   brackets_public_select  (SELECT, true)
+--   brackets_public_insert  (INSERT, true)
+--   brackets_public_update  (UPDATE, true)

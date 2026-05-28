@@ -4,6 +4,8 @@ Static fan bracket simulator for the 2026 FIFA World Cup — game-by-game predic
 
 Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or saved to a **Supabase** leaderboard with nickname + 4-digit PIN.
 
+**Going live?** Follow [GO-LIVE.md](GO-LIVE.md).
+
 ## Apps
 
 | File | Description |
@@ -30,7 +32,7 @@ Shared modules (loaded before the apps in HTML):
 3. Copy **Project URL** and **anon public** key into `supabase-utils.js` (replace `YOUR_PROJECT` placeholders).
 4. Deploy — users can save brackets from the championship screen or Swipe Cup podium.
 
-Saved brackets are loaded read-only via `index.html?bracket=nickname`. Hash sharing (`#share=`) still works and takes precedence when both are present.
+Saved brackets load read-only on `swipe.html?bracket=nickname`. Hash sharing uses `swipe.html#share=…` (`index.html` share URLs redirect to Swipe).
 
 ```bash
 npm install
@@ -52,8 +54,6 @@ PINs are stored as SHA-256 hashes client-side before upsert. Re-submitting with 
 ## CI
 
 [![CI](https://github.com/itaykt/world-cup-predictor/actions/workflows/ci.yml/badge.svg)](https://github.com/itaykt/world-cup-predictor/actions/workflows/ci.yml)
-
-> Replace `itaykt/world-cup-predictor` in the badge URL with your GitHub `user/repo` after publishing.
 
 ## License
 

@@ -60,6 +60,19 @@
               <i class="fa-solid fa-play"></i> Start Simulation
             </button>
           </div>
+
+          <div class="leaderboard-widget glass-panel" id="swipe-leaderboard-section" style="margin-top: 16px; text-align: left;">
+            <div class="leaderboard-widget-header">
+              <h4 style="margin: 0; font-size: 0.85rem;"><i class="fa-solid fa-ranking-star highlight-gold"></i> Community leaderboard</h4>
+              <button type="button" id="btn-refresh-leaderboard" class="btn btn-secondary btn-sm" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div id="leaderboard-list" class="leaderboard-list">
+              <p class="sidebar-help-text" style="margin: 8px 0 0;">Loading…</p>
+            </div>
+            <p id="leaderboard-unconfigured" class="sidebar-help-text hidden" style="margin: 8px 0 0;">
+              Add Supabase keys in <code>supabase-utils.js</code> to enable saves.
+            </p>
+          </div>
         </div>
       </section>
 

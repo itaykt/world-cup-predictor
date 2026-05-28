@@ -24,7 +24,7 @@ export default [
     }
   },
   {
-    files: ["tests/**/*.js", "vitest.config.js"],
+    files: ["tests/**/*.js", "vitest.config.js", "scripts/**/*.mjs"],
     languageOptions: {
       sourceType: "module",
       globals: {

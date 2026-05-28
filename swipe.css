@@ -1606,3 +1606,74 @@ body.viewer-mode #pane-swipe-welcome {
 body.viewer-mode #pane-bracket-view:not(.hidden) {
   display: flex !important;
 }
+
+/* Leaderboard (welcome screen) */
+.leaderboard-widget {
+  width: 100%;
+}
+
+.leaderboard-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.78rem;
+}
+
+.leaderboard-row:hover {
+  border-color: var(--gold-400);
+}
+
+.leaderboard-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leaderboard-nick {
+  font-weight: 700;
+  color: var(--gold-400);
+}
+
+.leaderboard-champ {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-time {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sidebar-help-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}

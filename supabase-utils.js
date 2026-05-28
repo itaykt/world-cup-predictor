@@ -12,9 +12,8 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : this, function () {
   // TODO: replace with your project values from Supabase → Project Settings → API
-  const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
-  const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
-
+  const SUPABASE_URL = "https://uylamonpjwocaottuaeg.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bGFtb25wandvY2FvdHR1YWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NzU5NTcsImV4cCI6MjA5NTU1MTk1N30.-kAaY7Z8r6Wv2JOUXF6wO4iu59n45xLzPgpUESpXWsI";
   const TABLE = "brackets";
   let client = null;
 
