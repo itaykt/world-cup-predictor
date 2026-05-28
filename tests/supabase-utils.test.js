@@ -49,3 +49,39 @@ describe("SupabaseBracket.championFromPayload", () => {
     expect(label).toBe("🇧🇷 Brazil");
   });
 });
+
+describe("SupabaseBracket.aggregateChampionCounts", () => {
+  it("groups brackets by champion, adds percent, sorts by count", () => {
+    const rows = [
+      { champion: "🇧🇷 Brazil" },
+      { champion: "🇦🇷 Argentina" },
+      { champion: "🇧🇷 Brazil" },
+      { champion: "🇧🇷 Brazil" },
+      { champion: "" }
+    ];
+    expect(SupabaseBracket.aggregateChampionCounts(rows)).toEqual([
+      { champion: "🇧🇷 Brazil", count: 3, percent: 60 },
+      { champion: "—", count: 1, percent: 20 },
+      { champion: "🇦🇷 Argentina", count: 1, percent: 20 }
+    ]);
+  });
+
+  it("returns at most the top 6 champions", () => {
+    const rows = [
+      { champion: "A" },
+      { champion: "B" },
+      { champion: "C" },
+      { champion: "D" },
+      { champion: "E" },
+      { champion: "F" },
+      { champion: "G" },
+      { champion: "H" },
+      { champion: "A" },
+      { champion: "A" }
+    ];
+    const top = SupabaseBracket.aggregateChampionCounts(rows);
+    expect(top).toHaveLength(6);
+    expect(top[0]).toEqual({ champion: "A", count: 3, percent: 30 });
+    expect(top.map((r) => r.champion)).not.toContain("H");
+  });
+});

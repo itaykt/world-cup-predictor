@@ -1138,8 +1138,11 @@ kbd {
 .intro-card-mock {
   grid-column: 2;
   grid-row: 2;
+  box-sizing: border-box;
   width: 132px;
+  height: 72px;
   min-height: 72px;
+  max-height: 72px;
   border-radius: 20px;
   border: 2px solid rgba(254, 60, 114, 0.22);
   background: linear-gradient(
@@ -1155,6 +1158,31 @@ kbd {
   align-items: center;
   justify-content: center;
   padding: 12px;
+  overflow: hidden;
+}
+
+.intro-match-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.intro-match-ball {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.intro-match-vs {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: rgba(254, 60, 114, 0.55);
+  line-height: 1;
+  user-select: none;
 }
 
 .btn-intro-kickoff {
@@ -1474,10 +1502,20 @@ kbd {
 }
 
 .welcome-logo-animated {
-  font-size: 3rem;
-  margin-bottom: 5px;
-  color: var(--gold-300);
-  filter: drop-shadow(0 0 12px var(--gold-glow));
+  margin: 0 auto 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-logo-img {
+  display: block;
+  width: auto;
+  max-width: 140px;
+  height: auto;
+  max-height: 168px;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .welcome-intro {
@@ -1650,6 +1688,10 @@ kbd {
 .bracket-view-footer {
   padding: 12px;
   margin-top: 8px;
+}
+
+.bracket-view-footer .btn-intro-kickoff {
+  margin-top: 0;
 }
 
 .bv-section-title {
@@ -1863,6 +1905,14 @@ kbd {
   font-weight: 800;
   color: var(--gold-400);
   margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.bv-finals-champion-line {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #b45309;
+  margin-top: 2px;
 }
 
 .bv-champion-slot {
@@ -1912,6 +1962,63 @@ body.viewer-mode #pane-bracket-view:not(.hidden) {
   align-items: center;
   gap: 8px;
   margin-bottom: 4px;
+}
+
+.leaderboard-champion-bars {
+  margin: 8px 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.champion-bars-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.champion-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(48px, 2.2fr) 36px;
+  align-items: center;
+  gap: 8px;
+}
+
+.champion-bar-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.champion-bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.champion-bar-fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 999px;
+  box-sizing: border-box;
+  border: 1px solid #000;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  transition: width 0.35s ease;
+}
+
+.champion-bar-fill--default {
+  background: linear-gradient(90deg, var(--gold-400), #ff7854);
+}
+
+.champion-bar-pct {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--gold-400);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .leaderboard-list {

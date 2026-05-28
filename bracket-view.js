@@ -51,9 +51,18 @@
     return `${b.flag} ${b.name} win`;
   }
 
-  function formatKnockoutResult(winnerId, teamsDb) {
+  function formatKnockoutResult(winnerId, teamsDb, matchId) {
     if (!winnerId || !teamsDb[winnerId]) return "";
     const t = teamsDb[winnerId];
+    if (matchId === 104) {
+      return {
+        primary: `${t.flag} ${t.name} won`,
+        secondary: `${t.name} are champions`
+      };
+    }
+    if (matchId === 103) {
+      return `${t.flag} ${t.name} won`;
+    }
     return `${t.flag} Advances`;
   }
 
@@ -105,7 +114,7 @@
     const tA = thirdResolved.a || thirdResolved.teamA;
     const tB = thirdResolved.b || thirdResolved.teamB;
     const tWin = knockoutPicks[103];
-    const tScore = formatKnockoutResult(tWin, teamsDb);
+    const tScore = formatKnockoutResult(tWin, teamsDb, 103);
     thirdBox.appendChild(buildMiniFinalPair(teamsDb, tA, tB, tWin, tScore));
     wrap.appendChild(thirdBox);
 
@@ -116,7 +125,7 @@
     const fA = fResolved.a || fResolved.teamA;
     const fB = fResolved.b || fResolved.teamB;
     const fWin = knockoutPicks[104];
-    const fScore = formatKnockoutResult(fWin, teamsDb);
+    const fScore = formatKnockoutResult(fWin, teamsDb, 104);
     finalBox.appendChild(buildMiniFinalPair(teamsDb, fA, fB, fWin, fScore, true));
     wrap.appendChild(finalBox);
 
@@ -129,7 +138,19 @@
     if (scoreText) {
       const sc = document.createElement("div");
       sc.className = "bv-finals-score";
-      sc.textContent = scoreText;
+      if (typeof scoreText === "object" && scoreText.primary) {
+        const wonLine = document.createElement("div");
+        wonLine.textContent = scoreText.primary;
+        sc.appendChild(wonLine);
+        if (scoreText.secondary) {
+          const champLine = document.createElement("div");
+          champLine.className = "bv-finals-champion-line";
+          champLine.textContent = scoreText.secondary;
+          sc.appendChild(champLine);
+        }
+      } else {
+        sc.textContent = scoreText;
+      }
       row.appendChild(sc);
     }
     [teamA, teamB].forEach((tid) => {

@@ -158,6 +158,7 @@ const DOM = {
   bracketViewGroups: document.getElementById("bracket-view-groups"),
   bracketViewKnockout: document.getElementById("bracket-view-knockout"),
   btnBracketToggleGroups: document.getElementById("btn-bracket-toggle-groups"),
+  leaderboardChampionBars: document.getElementById("leaderboard-champion-bars"),
   leaderboardList: document.getElementById("leaderboard-list"),
   leaderboardUnconfigured: document.getElementById("leaderboard-unconfigured"),
   btnRefreshLeaderboard: document.getElementById("btn-refresh-leaderboard"),
@@ -1405,6 +1406,68 @@ async function tryLoadSharedOrSavedBracket() {
   return false;
 }
 
+function getChampionBarColor(championLabel) {
+  if (typeof TournamentData !== "undefined" && TournamentData.championBarColorFromLabel) {
+    return TournamentData.championBarColorFromLabel(championLabel);
+  }
+  return null;
+}
+
+function clearChampionBars() {
+  if (!DOM.leaderboardChampionBars) return;
+  DOM.leaderboardChampionBars.classList.add("hidden");
+  DOM.leaderboardChampionBars.innerHTML = "";
+}
+
+function renderChampionBars(aggregates) {
+  if (!DOM.leaderboardChampionBars) return;
+  if (!aggregates || !aggregates.length) {
+    clearChampionBars();
+    return;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "champion-bars-table";
+  wrap.setAttribute("role", "table");
+
+  aggregates.forEach(({ champion, percent }) => {
+    const row = document.createElement("div");
+    row.className = "champion-bar-row";
+    row.setAttribute("role", "row");
+
+    const label = document.createElement("span");
+    label.className = "champion-bar-label";
+    label.setAttribute("role", "cell");
+    label.textContent = champion;
+
+    const trackCell = document.createElement("div");
+    trackCell.className = "champion-bar-track";
+    trackCell.setAttribute("role", "cell");
+    const fill = document.createElement("div");
+    fill.className = "champion-bar-fill";
+    fill.style.width = `${percent}%`;
+    const barColor = getChampionBarColor(champion);
+    if (barColor) {
+      fill.style.background = barColor;
+    } else {
+      fill.classList.add("champion-bar-fill--default");
+    }
+    trackCell.appendChild(fill);
+
+    const pctEl = document.createElement("span");
+    pctEl.className = "champion-bar-pct";
+    pctEl.setAttribute("role", "cell");
+    pctEl.textContent = `${percent}%`;
+
+    row.append(label, trackCell, pctEl);
+    wrap.appendChild(row);
+  });
+
+  DOM.leaderboardChampionBars.innerHTML = "";
+  DOM.leaderboardChampionBars.appendChild(wrap);
+  DOM.leaderboardChampionBars.classList.remove("hidden");
+}
+
 async function renderLeaderboard() {
   if (!DOM.leaderboardList) return;
 
@@ -1414,21 +1477,29 @@ async function renderLeaderboard() {
   }
   if (!configured) {
     DOM.leaderboardList.innerHTML = "";
+    clearChampionBars();
     return;
   }
 
+  clearChampionBars();
   DOM.leaderboardList.innerHTML = `<p class="sidebar-help-text" style="margin:8px 0 0;">${pickLoadingLine()}</p>`;
   const result = await SupabaseBracket.listBrackets();
 
   if (!result.ok) {
     DOM.leaderboardList.innerHTML = `<p class="save-share-error" style="margin:8px 0 0;">${ERROR_KICKOFF_MSG}</p>`;
+    clearChampionBars();
     return;
   }
 
   if (!result.brackets.length) {
     DOM.leaderboardList.innerHTML =
       '<p class="sidebar-help-text" style="margin:8px 0 0;">No predictions yet — be the first after you finish!</p>';
+    clearChampionBars();
     return;
+  }
+
+  if (typeof SupabaseBracket.aggregateChampionCounts === "function") {
+    renderChampionBars(SupabaseBracket.aggregateChampionCounts(result.brackets));
   }
 
   DOM.leaderboardList.innerHTML = "";

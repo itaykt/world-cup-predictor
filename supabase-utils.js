@@ -201,6 +201,27 @@
     return { ok: true, brackets: data || [] };
   }
 
+  const CHAMPION_BAR_TOP_N = 6;
+
+  /** Group saved brackets by champion; percent of all predictors; top N only. */
+  function aggregateChampionCounts(brackets, limit = CHAMPION_BAR_TOP_N) {
+    const list = brackets || [];
+    const total = list.length;
+    const counts = new Map();
+    for (const row of list) {
+      const key = (row.champion || "").trim() || "—";
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([champion, count]) => ({
+        champion,
+        count,
+        percent: total > 0 ? Math.round((count / total) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count || a.champion.localeCompare(b.champion))
+      .slice(0, limit);
+  }
+
   return {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
@@ -215,6 +236,8 @@
     buildSubmittedBracketUrl,
     submitBracket,
     getBracket,
-    listBrackets
+    listBrackets,
+    aggregateChampionCounts,
+    CHAMPION_BAR_TOP_N
   };
 });

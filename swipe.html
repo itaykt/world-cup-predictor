@@ -47,8 +47,10 @@
       <!-- PANE 0: WELCOME SCREEN -->
       <section id="pane-swipe-welcome" class="swipe-pane hidden">
         <div class="welcome-glass-card glass-panel text-center">
-          <div class="welcome-logo-animated"><i class="fa-solid fa-trophy highlight-gold fa-bounce"></i></div>
-          <span class="sub-podium-label">SWIPE CUP 2026</span>
+          <div class="welcome-logo-animated">
+            <img src="assets/world-cup-2026-logo.png" alt="FIFA World Cup 2026" class="welcome-logo-img" width="160" height="200">
+          </div>
+          <span class="sub-podium-label">World cup 2026</span>
           <h2>Swipe the Road to the Final</h2>
           <p class="welcome-intro">No spreadsheets. No brackets. Just swipe through every match and see who survives your World Cup.</p>
           
@@ -68,6 +70,7 @@
               <h4 style="margin: 0; font-size: 0.85rem;"><i class="fa-solid fa-ranking-star highlight-gold"></i> Predictions</h4>
               <button type="button" id="btn-refresh-leaderboard" class="btn btn-secondary btn-sm" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
             </div>
+            <div id="leaderboard-champion-bars" class="leaderboard-champion-bars hidden" aria-label="Champion picks summary"></div>
             <div id="leaderboard-list" class="leaderboard-list">
               <p class="sidebar-help-text" style="margin: 8px 0 0;">Drawing the groups…</p>
             </div>
@@ -232,7 +235,7 @@
           <div id="bracket-view-groups" class="bracket-view-panel hidden"></div>
         </div>
         <div class="bracket-view-footer glass-panel">
-          <a href="swipe.html" id="btn-bracket-make-own" class="btn btn-gold btn-block">
+          <a href="swipe.html" id="btn-bracket-make-own" class="btn btn-gold btn-lg btn-block btn-intro-kickoff">
             <i class="fa-solid fa-play"></i> Make your own prediction
           </a>
         </div>
@@ -263,7 +266,13 @@
           <span class="intro-arrow">→</span>
           <span class="intro-label">Team B wins</span>
         </div>
-        <div class="intro-card-mock" aria-hidden="true"></div>
+        <div class="intro-card-mock" aria-hidden="true">
+          <div class="intro-match-icons">
+            <i class="fa-solid fa-futbol intro-match-ball" aria-hidden="true"></i>
+            <span class="intro-match-vs" aria-hidden="true">×</span>
+            <i class="fa-solid fa-futbol intro-match-ball" aria-hidden="true"></i>
+          </div>
+        </div>
       </div>
       <p class="swipe-intro-note" id="swipe-intro-knockout-note">Knockout rounds: left or right only — no draws.</p>
       <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-lg btn-block btn-intro-kickoff">Kick off</button>

@@ -71,6 +71,69 @@
   pan: { name: "Panama", flag: "🇵🇦", rank: 45, stars: ["Adalberto Carrasquilla", "Michael Amir Murillo", "José Fajardo"], history: "Resilient CONCACAF side known for highly disciplined low-block setups." }
 };
 
+/** Primary jersey / flag color for champion bar charts (welcome screen). */
+const TEAM_BAR_COLORS = {
+  mex: "#006847",
+  rsa: "#007749",
+  kor: "#C60C30",
+  cze: "#11457E",
+  can: "#D80621",
+  bih: "#002395",
+  qat: "#8A1538",
+  sui: "#D52B1E",
+  bra: "#009C3B",
+  mar: "#C1272D",
+  hai: "#00209F",
+  sco: "#005EB8",
+  usa: "#3C3B6E",
+  par: "#D52B1E",
+  aus: "#FFCD00",
+  tur: "#E30A17",
+  ger: "#000000",
+  cuw: "#002B7F",
+  civ: "#F77F00",
+  ecu: "#FFD200",
+  ned: "#FF6600",
+  jpn: "#BC002D",
+  swe: "#006AA7",
+  tun: "#E70013",
+  bel: "#EF3340",
+  egy: "#CE1126",
+  irn: "#239F40",
+  nzl: "#000000",
+  esp: "#AA151B",
+  cpv: "#003893",
+  ksa: "#006C35",
+  ury: "#55B7F7",
+  fra: "#002395",
+  sen: "#00853F",
+  irq: "#007A3D",
+  nor: "#BA0C2F",
+  arg: "#74ACDF",
+  dza: "#006233",
+  aut: "#ED2939",
+  jor: "#007A3D",
+  por: "#006600",
+  cod: "#007FFF",
+  uzb: "#1EB53A",
+  col: "#FCD116",
+  eng: "#CF081F",
+  cro: "#FF0000",
+  gha: "#EF3340",
+  pan: "#DA121A"
+};
+
+function championBarColorFromLabel(championLabel) {
+  if (!championLabel || championLabel === "—") return null;
+  for (const id of Object.keys(TEAMS_DB)) {
+    const t = TEAMS_DB[id];
+    if (`${t.flag} ${t.name}` === championLabel) {
+      return TEAM_BAR_COLORS[id] || null;
+    }
+  }
+  return null;
+}
+
 const GROUPS_DATA = {
   A: ["mex", "rsa", "kor", "cze"],
   B: ["can", "bih", "qat", "sui"],
@@ -105,6 +168,8 @@ const GROUPS_DATA = {
 
   return {
     TEAMS_DB,
+    TEAM_BAR_COLORS,
+    championBarColorFromLabel,
     GROUPS_DATA,
     GROUP_STAGE_MATCHES_BY_MD,
     GROUP_STAGE_MATCHES_FLAT
