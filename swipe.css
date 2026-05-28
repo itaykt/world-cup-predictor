@@ -384,7 +384,12 @@ body.deck-active .card-vs-body {
 
 body.deck-active .card-team-panel {
   justify-self: center;
-  max-width: 118px;
+  max-width: 132px;
+}
+
+body.deck-active .card-team-flag {
+  font-size: 3.15rem;
+  padding: 8px;
 }
 
 body.deck-active .card-team-stars {
@@ -1546,16 +1551,16 @@ kbd {
   }
 
   body.deck-active .card-team-panel {
-    max-width: 108px;
+    max-width: 128px;
   }
 
   body.deck-active .card-team-stars {
     margin-top: auto;
   }
 
-  .card-team-flag {
-    font-size: 2.15rem !important;
-    padding: 6px !important;
+  body.deck-active .card-team-flag {
+    font-size: 2.95rem !important;
+    padding: 8px !important;
   }
 
   .card-team-name {
@@ -1623,8 +1628,8 @@ kbd {
 /* Very short mobile viewports (browser chrome + small phones) */
 @media (max-width: 480px) and (max-height: 700px) {
   body.deck-active .card-team-flag {
-    font-size: 1.85rem !important;
-    padding: 4px !important;
+    font-size: 2.55rem !important;
+    padding: 6px !important;
   }
 
   body.deck-active .card-vs-body {
