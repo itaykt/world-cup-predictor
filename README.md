@@ -2,29 +2,52 @@
 
 Static fan bracket simulator for the 2026 FIFA World Cup — game-by-game predictions, full knockout tree, and **Swipe Cup** (Tinder-style mobile predictor).
 
-Live on GitHub Pages (no backend): predictions can be shared via URL-encoded bracket data.
+Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or saved to a **Supabase** leaderboard with nickname + 4-digit PIN.
 
 ## Apps
 
 | File | Description |
 |------|-------------|
-| [`index.html`](index.html) | Full simulator with match feed, standings, bracket tree, AI settings |
-| [`swipe.html`](swipe.html) | Fast swipe-through predictor; shares link to full bracket viewer |
+| [`swipe.html`](swipe.html) | **Main app** — swipe predictor, results podium, simple bracket viewer |
+| [`index.html`](index.html) | Optional full simulator (advanced); share links redirect to Swipe |
 
 ## Development
 
-Requires [Node.js](https://nodejs.org/) 18+.
+Requires [Node.js](https://nodejs.org/) 20+.
+
+Shared modules (loaded before the apps in HTML):
+
+- [`data.js`](data.js) — teams, groups, match schedule
+- [`tournament-standings.js`](tournament-standings.js) — standings, tiebreakers, third-place wildcards
+- [`share-utils.js`](share-utils.js) — URL share encoding for GitHub Pages
+- [`supabase-utils.js`](supabase-utils.js) — optional leaderboard save/load (Supabase CDN client)
+- [`bracket-view.js`](bracket-view.js) — read-only group tables + knockout list in Swipe
+
+### Supabase setup (optional)
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in **SQL Editor**.
+3. Copy **Project URL** and **anon public** key into `supabase-utils.js` (replace `YOUR_PROJECT` placeholders).
+4. Deploy — users can save brackets from the championship screen or Swipe Cup podium.
+
+Saved brackets are loaded read-only via `index.html?bracket=nickname`. Hash sharing (`#share=`) still works and takes precedence when both are present.
 
 ```bash
 npm install
 npm run lint      # ESLint
-npm test          # Vitest unit tests
+npm test          # Vitest unit tests (share-utils + standings)
 npm run ci        # lint + test (same as GitHub Actions)
 ```
 
 ## Sharing
 
-Share links encode the full bracket in `index.html#share=…` (see [`share-utils.js`](share-utils.js)). Works on static hosting only — no server storage.
+| Method | URL | Storage |
+|--------|-----|---------|
+| Hash share | `swipe.html#share=…` | None (full state in URL) |
+| Leaderboard | `swipe.html?bracket=nickname` | Supabase `brackets` table |
+| Bracket only | `swipe.html?bracket=nick&view=bracket` | Opens group + knockout view directly |
+
+PINs are stored as SHA-256 hashes client-side before upsert. Re-submitting with the same nickname requires the correct PIN.
 
 ## CI
 

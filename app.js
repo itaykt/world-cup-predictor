@@ -3,107 +3,10 @@
  * Application Controller - Vanilla ES6
  */
 
-// --- 1. WORLD CUP 2026 TEAMS & CONFIRMED GROUPS DRAW ---
-const TEAMS_DB = {
-  // Group A
-  mex: { name: "Mexico", flag: "🇲🇽", rank: 15, stars: ["Santiago Giménez", "Edson Álvarez", "Luis Chávez"], history: "Co-hosts seeking to break the fifth-game curse on home soil." },
-  rsa: { name: "South Africa", flag: "🇿🇦", rank: 59, stars: ["Percy Tau", "Teboho Mokoena", "Lyle Foster"], history: "Bafana Bafana returning to capture the magic spirit of 2010." },
-  kor: { name: "South Korea", flag: "🇰🇷", rank: 22, stars: ["Son Heung-min", "Kim Min-jae", "Lee Kang-in"], history: "Taegeuk Warriors looking to replicate their legendary 2002 semi-final run." },
-  cze: { name: "Czechia", flag: "🇨🇿", rank: 40, stars: ["Patrik Schick", "Tomáš Souček", "Adam Hložek"], history: "Tactically rigid European side looking to surprise global giants." },
-  // Group B
-  can: { name: "Canada", flag: "🇨🇦", rank: 48, stars: ["Alphonso Davies", "Jonathan David", "Tajon Buchanan"], history: "Co-hosts seeking their first-ever World Cup knockout stage appearance." },
-  bih: { name: "Bosnia & Herz.", flag: "🇧🇦", rank: 74, stars: ["Edin Džeko", "Miralem Pjanić", "Sead Kolašinac"], history: "Golden generation veterans aiming for a final major tournament highlight." },
-  qat: { name: "Qatar", flag: "🇶🇦", rank: 37, stars: ["Akram Afif", "Almoez Ali", "Boualem Khoukhi"], history: "Recent Asian Cup champions hoping to prove their mettle on the global stage." },
-  sui: { name: "Switzerland", flag: "🇨🇭", rank: 19, stars: ["Granit Xhaka", "Manuel Akanji", "Breel Embolo"], history: "Knockout-stage regulars famous for their giant-killing capabilities." },
-  // Group C
-  bra: { name: "Brazil", flag: "🇧🇷", rank: 5, stars: ["Vinícius Júnior", "Rodrygo", "Neymar Jr"], history: "Five-time champions hunting relentlessly for their elusive sixth star." },
-  mar: { name: "Morocco", flag: "🇲🇦", rank: 13, stars: ["Achraf Hakimi", "Yassine Bounou", "Sofyan Amrabat"], history: "Historic 2022 semi-finalists proving they belong to the world's football elite." },
-  hai: { name: "Haiti", flag: "🇭🇹", rank: 86, stars: ["Frantzdy Pierrot", "Duckens Nazon", "Derrick Etienne"], history: "Caribbean underdogs looking to create monumental group-stage upsets." },
-  sco: { name: "Scotland", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", rank: 36, stars: ["Scott McTominay", "John McGinn", "Andrew Robertson"], history: "Passionate squad aiming for their historic first-ever group stage progression." },
-  // Group D
-  usa: { name: "United States", flag: "🇺🇸", rank: 11, stars: ["Christian Pulisic", "Weston McKennie", "Folarin Balogun"], history: "Co-hosts with a talented, highly athletic young core primed for a deep run." },
-  par: { name: "Paraguay", flag: "🇵🇾", rank: 56, stars: ["Miguel Almirón", "Julio Enciso", "Gustavo Gómez"], history: "Resilient South American side anchored by defensive grit and counter-attacks." },
-  aus: { name: "Australia", flag: "🇦🇺", rank: 23, stars: ["Mathew Ryan", "Craig Goodwin", "Jackson Irvine"], history: "Socceroos hoping to build on their impressive 2022 round of 16 run." },
-  tur: { name: "Türkiye", flag: "🇹🇷", rank: 26, stars: ["Hakan Çalhanoğlu", "Arda Güler", "Kenan Yıldız"], history: "Exciting young generation dreaming of repeating their 2002 bronze medal run." },
-  // Group E
-  ger: { name: "Germany", flag: "🇩🇪", rank: 16, stars: ["Florian Wirtz", "Jamal Musiala", "Kai Havertz"], history: "Four-time champions rebuilding with world-class young playmakers." },
-  cuw: { name: "Curaçao", flag: "🇨🇼", rank: 91, stars: ["Juninho Bacuna", "Leandro Bacuna", "Rangelo Janga"], history: "Caribbean islanders seeking to make their first splash on the big stage." },
-  civ: { name: "Côte d'Ivoire", flag: "🇨🇮", rank: 38, stars: ["Sébastien Haller", "Franck Kessié", "Simon Adingra"], history: "Recent African champions possessing elite physical presence and speed." },
-  ecu: { name: "Ecuador", flag: "🇪🇨", rank: 31, stars: ["Moisés Caicedo", "Piero Hincapié", "Enner Valencia"], history: "Fearless Andean side with high altitude pace and defensive resilience." },
-  // Group F
-  ned: { name: "Netherlands", flag: "🇳🇱", rank: 7, stars: ["Virgil van Dijk", "Cody Gakpo", "Frenkie de Jong"], history: "Oranje seeking to break their three-time finalist bridesmaid curse." },
-  jpn: { name: "Japan", flag: "🇯🇵", rank: 18, stars: ["Kaoru Mitoma", "Takefusa Kubo", "Wataru Endo"], history: "Samurai Blue boasting high-octane pressing and tactical precision." },
-  swe: { name: "Sweden", flag: "🇸🇪", rank: 28, stars: ["Alexander Isak", "Dejan Kulusevski", "Viktor Gyökeres"], history: "High-flying Scandinavian attackers looking to power a deep knockout run." },
-  tun: { name: "Tunisia", flag: "🇹🇳", rank: 41, stars: ["Aissa Laïdouni", "Ellyes Skhiri", "Youssef Msakni"], history: "Carthage Eagles famous for tactical discipline and defensive solidness." },
-  // Group G
-  bel: { name: "Belgium", flag: "🇧🇪", rank: 3, stars: ["Kevin De Bruyne", "Romelu Lukaku", "Jérémy Doku"], history: "Red Devils blending veteran geniuses with explosive young wingers." },
-  egy: { name: "Egypt", flag: "🇪🇬", rank: 30, stars: ["Mohamed Salah", "Mostafa Mohamed", "Omar Marmoush"], history: "Pharaohs led by a legendary winger hungry for global glory." },
-  irn: { name: "IR Iran", flag: "🇮🇷", rank: 20, stars: ["Mehdi Taremi", "Sardar Azmoun", "Alireza Jahanbakhsh"], history: "Asian powerhouse featuring a lethal strike partnership." },
-  nzl: { name: "New Zealand", flag: "🇳🇿", rank: 104, stars: ["Chris Wood", "Liberato Cacace", "Sarpreet Singh"], history: "OFC champions aiming to remain undefeated just like in South Africa 2010." },
-  // Group H
-  esp: { name: "Spain", flag: "🇪🇸", rank: 8, stars: ["Lamine Yamal", "Rodri", "Nico Williams"], history: "European champions playing breathtaking, possession-based modern football." },
-  cpv: { name: "Cabo Verde", flag: "🇨🇻", rank: 65, stars: ["Ryan Mendes", "Garry Rodrigues", "Bebé"], history: "Blue Sharks seeking to continue their giant-killing African Cup form." },
-  ksa: { name: "Saudi Arabia", flag: "🇸🇦", rank: 53, stars: ["Salem Al-Dawsari", "Firas Al-Buraikan", "Abdulrahman Ghareeb"], history: "Remembered for upsetting Argentina in 2022; highly organized squad." },
-  ury: { name: "Uruguay", flag: "🇺🇾", rank: 14, stars: ["Federico Valverde", "Darwin Núñez", "Luis Suárez"], history: "Two-time winners featuring relentless high-press and legendary grit." },
-  // Group I
-  fra: { name: "France", flag: "🇫🇷", rank: 2, stars: ["Kylian Mbappé", "Antoine Griezmann", "William Saliba"], history: "Pre-tournament favorites loaded with world-class squad depth and speed." },
-  sen: { name: "Senegal", flag: "🇸🇳", rank: 17, stars: ["Sadio Mané", "Nicolas Jackson", "Kalidou Koulibaly"], history: "Lions of Teranga looking to make Africa proud with elite talent." },
-  irq: { name: "Iraq", flag: "🇮🇶", rank: 58, stars: ["Aymen Hussein", "Ali Jasim", "Zidane Iqbal"], history: "Lions of Mesopotamia returning with fierce passion and dangerous attackers." },
-  nor: { name: "Norway", flag: "🇳🇴", rank: 47, stars: ["Erling Haaland", "Martin Ødegaard", "Oscar Bobb"], history: "Boasting the world's most lethal striker and an elite midfield orchestrator." },
-  // Group J
-  arg: { name: "Argentina", flag: "🇦🇷", rank: 1, stars: ["Lionel Messi", "Lautaro Martínez", "Julián Álvarez"], history: "Defending champions seeking to give their legendary captain a perfect farewell." },
-  dza: { name: "Algeria", flag: "🇩🇿", rank: 43, stars: ["Riyad Mahrez", "Saïd Benrahma", "Amine Gouiri"], history: "Desert Foxes possessing incredible individual technical brilliance." },
-  aut: { name: "Austria", flag: "🇦🇹", rank: 25, stars: ["Marcel Sabitzer", "Konrad Laimer", "Christoph Baumgartner"], history: "Intense high-pressing machine engineered for physical dominance." },
-  jor: { name: "Jordan", flag: "🇯🇴", rank: 71, stars: ["Musa Al-Taamari", "Yazan Al-Naimat", "Ali Olwan"], history: "Surprise Asian Cup finalists ready to announce themselves to the world." },
-  // Group K
-  por: { name: "Portugal", flag: "🇵🇹", rank: 6, stars: ["Cristiano Ronaldo", "Bruno Fernandes", "Rafael Leão"], history: "Squad of extraordinary depth led by their record-breaking veteran captain." },
-  cod: { name: "DR Congo", flag: "🇨🇩", rank: 61, stars: ["Chancel Mbemba", "Yoane Wissa", "Meschack Elia"], history: "Physical and direct side capable of tearing apart open defenses on the counter." },
-  uzb: { name: "Uzbekistan", flag: "🇺🇿", rank: 64, stars: ["Eldor Shomurodov", "Abbosbek Fayzullaev", "Oston Urunov"], history: "Rising Asian stars featuring high-tempo organization and technical skills." },
-  col: { name: "Colombia", flag: "🇨🇴", rank: 12, stars: ["James Rodríguez", "Luis Díaz", "Jhon Durán"], history: "South American powerhouse playing spectacular, high-flair football." },
-  // Group L
-  eng: { name: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", rank: 4, stars: ["Harry Kane", "Jude Bellingham", "Bukayo Saka"], history: "Three Lions desperate to bring football home with a superstar roster." },
-  cro: { name: "Croatia", flag: "🇭🇷", rank: 10, stars: ["Luka Modrić", "Mateo Kovačić", "Joško Gvardiol"], history: "Legendary midfield masters aiming for one last historic tournament run." },
-  gha: { name: "Ghana", flag: "🇬🇭", rank: 68, stars: ["Mohammed Kudus", "Inaki Williams", "Thomas Partey"], history: "Black Stars hoping to repeat their iconic, dramatic 2010 quarter-final run." },
-  pan: { name: "Panama", flag: "🇵🇦", rank: 45, stars: ["Adalberto Carrasquilla", "Michael Amir Murillo", "José Fajardo"], history: "Resilient CONCACAF side known for highly disciplined low-block setups." }
-};
-
-const GROUPS_DATA = {
-  A: ["mex", "rsa", "kor", "cze"],
-  B: ["can", "bih", "qat", "sui"],
-  C: ["bra", "mar", "hai", "sco"],
-  D: ["usa", "par", "aus", "tur"],
-  E: ["ger", "cuw", "civ", "ecu"],
-  F: ["ned", "jpn", "swe", "tun"],
-  G: ["bel", "egy", "irn", "nzl"],
-  H: ["esp", "cpv", "ksa", "ury"],
-  I: ["fra", "sen", "irq", "nor"],
-  J: ["arg", "dza", "aut", "jor"],
-  K: ["por", "cod", "uzb", "col"],
-  L: ["eng", "cro", "gha", "pan"]
-};
-
-// --- DYNAMICALLY GENERATED GROUP STAGE MATCH SCHEDULE ---
-// 72 group stage games total, mapped exactly into 3 sequential Matchdays (24 games each)
-const GROUP_STAGE_MATCHES = (() => {
-  let md1 = [];
-  let md2 = [];
-  let md3 = [];
-
-  Object.keys(GROUPS_DATA).forEach(g => {
-    const teams = GROUPS_DATA[g];
-    // Matchday 1: Match 1 (T0 vs T1), Match 2 (T2 vs T3)
-    md1.push({ group: g, teamA: teams[0], teamB: teams[1], matchIndex: 0 });
-    md1.push({ group: g, teamA: teams[2], teamB: teams[3], matchIndex: 1 });
-    // Matchday 2: Match 3 (T0 vs T2), Match 4 (T1 vs T3)
-    md2.push({ group: g, teamA: teams[0], teamB: teams[2], matchIndex: 2 });
-    md2.push({ group: g, teamA: teams[1], teamB: teams[3], matchIndex: 3 });
-    // Matchday 3: Match 5 (T3 vs T0), Match 6 (T1 vs T2) - Decisive!
-    md3.push({ group: g, teamA: teams[3], teamB: teams[0], matchIndex: 4 });
-    md3.push({ group: g, teamA: teams[1], teamB: teams[2], matchIndex: 5 });
-  });
-
-  return { md1, md2, md3 };
-})();
+// --- 1. WORLD CUP 2026 TEAMS & CONFIRMED GROUPS DRAW (see data.js) ---
+const TEAMS_DB = TournamentData.TEAMS_DB;
+const GROUPS_DATA = TournamentData.GROUPS_DATA;
+const GROUP_STAGE_MATCHES = TournamentData.GROUP_STAGE_MATCHES_BY_MD;
 
 // --- APPLICATION STATE ENGINE ---
 let state = {
@@ -134,7 +37,6 @@ let state = {
   actualResults: null,
   
   // Anthropic API Key
-  anthropicKey: "",
 
   // Viewer read-only flag
   isViewer: false,
@@ -153,7 +55,6 @@ function initDefaultState() {
   state.goalscorers = {};
   state.savedBrackets = [];
   state.actualResults = null;
-  state.anthropicKey = localStorage.getItem("anthropic_key") || "";
   state.isViewer = false;
   state.userName = "";
   
@@ -163,7 +64,10 @@ function initDefaultState() {
 }
 
 // --- DOM CACHE ---
-const DOM = {
+let DOM = {};
+
+function initDOM() {
+  DOM = {
   stepNodes: document.querySelectorAll(".step-node"),
   stepLines: document.querySelectorAll(".step-line"),
   
@@ -190,8 +94,13 @@ const DOM = {
   btnSpotlightShare: document.getElementById("btn-spotlight-share"),
 
   // Stepper controls
+  btnShowLeaderboard: document.getElementById("btn-show-leaderboard"),
   btnShowFullBracket: document.getElementById("btn-show-full-bracket"),
   btnReset: document.getElementById("btn-reset"),
+  leaderboardSection: document.getElementById("leaderboard-section"),
+  leaderboardList: document.getElementById("leaderboard-list"),
+  leaderboardUnconfigured: document.getElementById("leaderboard-unconfigured"),
+  btnRefreshLeaderboard: document.getElementById("btn-refresh-leaderboard"),
 
   // Wizard active workspace
   lblActiveRoundTag: document.getElementById("lbl-active-round-tag"),
@@ -217,6 +126,7 @@ const DOM = {
   finishName: document.getElementById("finish-name"),
   finishSilverName: document.getElementById("finish-silver-name"),
   finishBronzeName: document.getElementById("finish-bronze-name"),
+  btnPodiumSaveShare: document.getElementById("btn-podium-save-share"),
   btnPodiumShareFinal: document.getElementById("btn-podium-share-final"),
   btnPodiumDownloadPoster: document.getElementById("btn-podium-download-poster"),
   btnStartOver: document.getElementById("btn-start-over"),
@@ -248,6 +158,18 @@ const DOM = {
   btnCopyLink: document.getElementById("btn-copy-link"),
   btnDownloadJson: document.getElementById("btn-download-json"),
   btnModalDownloadImage: document.getElementById("btn-modal-download-image"),
+
+  saveShareModal: document.getElementById("save-share-modal"),
+  btnCloseSaveShare: document.getElementById("btn-close-save-share"),
+  saveShareFormPanel: document.getElementById("save-share-form-panel"),
+  saveShareSuccessPanel: document.getElementById("save-share-success-panel"),
+  inputSaveNickname: document.getElementById("input-save-nickname"),
+  inputSavePin: document.getElementById("input-save-pin"),
+  saveShareError: document.getElementById("save-share-error"),
+  btnSubmitSaveShare: document.getElementById("btn-submit-save-share"),
+  txtSaveShareLink: document.getElementById("txt-save-share-link"),
+  btnCopySaveShareLink: document.getElementById("btn-copy-save-share-link"),
+  btnSaveShareDone: document.getElementById("btn-save-share-done"),
 
   // General Notification Banner
   toastEl: document.getElementById("toast-el"),
@@ -283,7 +205,8 @@ const DOM = {
   accScore: document.getElementById("acc-score"),
   accExact: document.getElementById("acc-exact"),
   accWinners: document.getElementById("acc-winners")
-};
+  };
+}
 
 // --- TOAST NOTIFICATIONS ---
 function showToast(message, isError = false) {
@@ -293,6 +216,16 @@ function showToast(message, isError = false) {
   setTimeout(() => {
     DOM.toastEl.classList.add("hidden");
   }, 3000);
+}
+
+
+function getAnthropicKey() {
+  return localStorage.getItem("anthropic_key") || "";
+}
+
+function setAnthropicKey(key) {
+  if (key) localStorage.setItem("anthropic_key", key);
+  else localStorage.removeItem("anthropic_key");
 }
 
 // --- STATE STORAGE ---
@@ -316,7 +249,6 @@ function loadFromLocalStorage() {
       state.goalscorers = data.goalscorers || {};
       state.savedBrackets = data.savedBrackets || [];
       state.actualResults = data.actualResults || null;
-      state.anthropicKey = data.anthropicKey || localStorage.getItem("anthropic_key") || "";
       
       // Safety check standings integrity
       for (const group of Object.keys(GROUPS_DATA)) {
@@ -399,142 +331,22 @@ function switchWizardStep(stepId) {
 
 // --- 3. DYNAMIC REAL-TIME STANDINGS CALCULATOR ---
 function recalculateAllGroupStandings() {
-  Object.keys(GROUPS_DATA).forEach(gLetter => {
-    const teams = GROUPS_DATA[gLetter];
-    let stats = {};
-    teams.forEach(t => {
-      stats[t] = { teamId: t, p: 0, w: 0, d: 0, l: 0, gd: 0, gf: 0, ga: 0, pts: 0 };
-    });
-
-    // Loop all matches associated with this group
-    const matchdays = ["md1", "md2", "md3"];
-    matchdays.forEach(md => {
-      GROUP_STAGE_MATCHES[md].forEach(m => {
-        if (m.group === gLetter) {
-          const key = `${gLetter}_${m.matchIndex}`;
-          const score = state.groupMatchScores[key];
-          
-          if (score && score.scoreA !== "" && score.scoreB !== "" && 
-              score.scoreA !== undefined && score.scoreB !== undefined) {
-            const sA = parseInt(score.scoreA);
-            const sB = parseInt(score.scoreB);
-            
-            stats[m.teamA].p++;
-            stats[m.teamB].p++;
-            stats[m.teamA].gf += sA;
-            stats[m.teamB].gf += sB;
-            stats[m.teamA].ga += sB;
-            stats[m.teamB].ga += sA;
-            stats[m.teamA].gd += (sA - sB);
-            stats[m.teamB].gd += (sB - sA);
-
-            if (sA > sB) {
-              stats[m.teamA].w++;
-              stats[m.teamA].pts += 3;
-              stats[m.teamB].l++;
-            } else if (sB > sA) {
-              stats[m.teamB].w++;
-              stats[m.teamB].pts += 3;
-              stats[m.teamA].l++;
-            } else {
-              stats[m.teamA].d++;
-              stats[m.teamB].d++;
-              stats[m.teamA].pts += 1;
-              stats[m.teamB].pts += 1;
-            }
-          }
-        }
-      });
-    });
-
-    // Sort using official FIFA tiebreaker Rules
-    let sorted = Object.values(stats);
-    sorted.sort((a, b) => {
-      if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.gd !== a.gd) return b.gd - a.gd;
-      if (b.gf !== a.gf) return b.gf - a.gf;
-      return TEAMS_DB[a.teamId].rank - TEAMS_DB[b.teamId].rank; // Lower ranking is better
-    });
-
-    state.groupStandings[gLetter] = sorted.map(row => row.teamId);
-  });
-
-  // Re-resolve top 8 wildcards
-  calculateTop8Wildcards();
+  const result = TournamentStandings.recalculate(state.groupMatchScores);
+  state.groupStandings = result.groupStandings;
+  state.thirdPlaceQualifiers = result.thirdPlaceQualifiers;
 }
 
-// Compute dynamic 3rd-placed wildcards standing ranks
 function calculateThirdPlacedList() {
-  let thirdsList = [];
-  
-  Object.keys(GROUPS_DATA).forEach(gLetter => {
-    // Get stats for T2 (3rd place) in the group standings
-    const standings = state.groupStandings[gLetter];
-    const teamId = standings[2];
-    
-    // We compute stats row for this team
-    let stats = { teamId, group: gLetter, p: 0, w: 0, d: 0, l: 0, gd: 0, gf: 0, ga: 0, pts: 0 };
-    
-    const matchdays = ["md1", "md2", "md3"];
-    matchdays.forEach(md => {
-      GROUP_STAGE_MATCHES[md].forEach(m => {
-        if (m.group === gLetter && (m.teamA === teamId || m.teamB === teamId)) {
-          const key = `${gLetter}_${m.matchIndex}`;
-          const score = state.groupMatchScores[key];
-          
-          if (score && score.scoreA !== "" && score.scoreB !== "" && 
-              score.scoreA !== undefined && score.scoreB !== undefined) {
-            const sA = parseInt(score.scoreA);
-            const sB = parseInt(score.scoreB);
-            const isTeamA = m.teamA === teamId;
-            
-            const myScore = isTeamA ? sA : sB;
-            const oppScore = isTeamA ? sB : sA;
-            
-            stats.p++;
-            stats.gf += myScore;
-            stats.ga += oppScore;
-            stats.gd += (myScore - oppScore);
-            
-            if (myScore > oppScore) {
-              stats.w++;
-              stats.pts += 3;
-            } else if (oppScore > myScore) {
-              stats.l++;
-            } else {
-              stats.d++;
-              stats.pts += 1;
-            }
-          }
-        }
-      });
-    });
-
-    thirdsList.push(stats);
-  });
-
-  // Sort them dynamically
-  thirdsList.sort((a, b) => {
-    if (b.pts !== a.pts) return b.pts - a.pts;
-    if (b.gd !== a.gd) return b.gd - a.gd;
-    if (b.gf !== a.gf) return b.gf - a.gf;
-    return TEAMS_DB[a.teamId].rank - TEAMS_DB[b.teamId].rank;
-  });
-
-  return thirdsList;
+  return TournamentStandings.calculateThirdPlacedList(state.groupMatchScores, state.groupStandings);
 }
 
-function calculateTop8Wildcards() {
-  const thirds = calculateThirdPlacedList();
-  // Filter the first 8
-  state.thirdPlaceQualifiers = thirds.slice(0, 8).map(t => t.teamId);
+function getAccumulatedStats(groupLetter, teamId) {
+  return TournamentStandings.getTeamSummaryStats(groupLetter, teamId, state.groupMatchScores);
 }
 
-// Render Sidebar standings mini group grid
 function renderSidebarStandings() {
   DOM.sidebarGroupsGrid.innerHTML = "";
 
-  // A. Populating mini tables
   Object.keys(GROUPS_DATA).forEach(gLetter => {
     const card = document.createElement("div");
     card.className = "mini-group-card";
@@ -567,13 +379,12 @@ function renderSidebarStandings() {
 
     const tbody = document.getElementById(`sidebar-tbody-g${gLetter}`);
     const standings = state.groupStandings[gLetter];
-    
+
     standings.forEach((teamId, idx) => {
       const team = TEAMS_DB[teamId];
       const tr = document.createElement("tr");
       if (idx < 2) tr.className = "qualify-yes";
-      
-      // Calculate active points and GD dynamically
+
       const rowStats = getAccumulatedStats(gLetter, teamId);
 
       tr.innerHTML = `
@@ -591,14 +402,13 @@ function renderSidebarStandings() {
     });
   });
 
-  // B. Populating Sidebar Wildcards board
   DOM.sidebarWildcardTbody.innerHTML = "";
   const thirds = calculateThirdPlacedList();
-  
+
   thirds.forEach((row, idx) => {
     const team = TEAMS_DB[row.teamId];
     const isAdvancing = state.thirdPlaceQualifiers.includes(row.teamId);
-    
+
     const tr = document.createElement("tr");
     if (isAdvancing) tr.className = "advancing-yes";
 
@@ -620,23 +430,19 @@ function renderSidebarStandings() {
     DOM.sidebarWildcardTbody.appendChild(tr);
   });
 
-  // C. Recalculate and update path difficulty chart
   renderPathDifficultyChart();
 }
 
-// Calculate Danger Meter Competitiveness Score for a Group based on Rank Spread
 function calculateGroupDangerMeter(gLetter) {
   const teamIds = GROUPS_DATA[gLetter];
   const ranks = teamIds.map(tId => TEAMS_DB[tId].rank);
-  
-  // Calculate Standard Deviation
+
   const mean = ranks.reduce((sum, val) => sum + val, 0) / ranks.length;
   const variance = ranks.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / ranks.length;
   const stdDev = Math.sqrt(variance);
-  
-  // Competitiveness Score: map standard deviation of ranks to a 10-99 score
+
   let score = Math.round(100 - (stdDev * 1.5));
-  score = Math.max(10, Math.min(99, score)); // Clamp
+  score = Math.max(10, Math.min(99, score));
 
   let label = "Predictable Group";
   let badgeClass = "danger-low";
@@ -654,41 +460,6 @@ function calculateGroupDangerMeter(gLetter) {
 
   return { score, label, badgeClass, icon };
 }
-
-// Dynamic calculator for individual group stage stats on active row
-function getAccumulatedStats(groupLetter, teamId) {
-  let stats = { gd: 0, pts: 0 };
-  const matchdays = ["md1", "md2", "md3"];
-  
-  matchdays.forEach(md => {
-    GROUP_STAGE_MATCHES[md].forEach(m => {
-      if (m.group === groupLetter && (m.teamA === teamId || m.teamB === teamId)) {
-        const key = `${groupLetter}_${m.matchIndex}`;
-        const score = state.groupMatchScores[key];
-        
-        if (score && score.scoreA !== "" && score.scoreB !== "" && 
-            score.scoreA !== undefined && score.scoreB !== undefined) {
-          const sA = parseInt(score.scoreA);
-          const sB = parseInt(score.scoreB);
-          const isTeamA = m.teamA === teamId;
-          
-          const myScore = isTeamA ? sA : sB;
-          const oppScore = isTeamA ? sB : sA;
-          
-          stats.gd += (myScore - oppScore);
-          if (myScore > oppScore) {
-            stats.pts += 3;
-          } else if (oppScore === myScore) {
-            stats.pts += 1;
-          }
-        }
-      }
-    });
-  });
-
-  return stats;
-}
-
 
 // --- 4. SEQUENTIAL ROUND MATCH CARD FEEDS ---
 function renderWizardMatchFeed() {
@@ -1335,6 +1106,17 @@ function renderChampionshipScreen() {
     }
   }
 
+  // Prompt to save online (once per browser session)
+  if (
+    !state.isViewer &&
+    typeof SupabaseBracket !== "undefined" &&
+    SupabaseBracket.isConfigured() &&
+    !sessionStorage.getItem("wc_save_share_prompt_shown")
+  ) {
+    sessionStorage.setItem("wc_save_share_prompt_shown", "1");
+    setTimeout(() => openSaveShareModal(), 700);
+  }
+
   // Trigger grand confetti show!
   triggerCelebratoryConfetti();
 }
@@ -1635,6 +1417,176 @@ function enterSharedViewerMode() {
   if (DOM.sharedBracketFooter) DOM.sharedBracketFooter.classList.remove("hidden");
 
   setTimeout(resetModalZoom, 150);
+}
+
+// --- Supabase: save, leaderboard, ?bracket= viewer ---
+function saveShareErrorMessage(code) {
+  const map = {
+    wrong_pin: "Wrong PIN for this nickname. Try again or pick another nickname.",
+    invalid_nickname: "Nickname must be 2–20 characters (letters, numbers, underscore).",
+    invalid_pin: "PIN must be exactly 4 digits.",
+    not_configured: "Online save is not configured. Set Supabase URL and anon key in supabase-utils.js.",
+    not_found: "No bracket found for that nickname."
+  };
+  return map[code] || "Could not save bracket. Please try again.";
+}
+
+function resetSaveShareModalPanels() {
+  if (!DOM.saveShareModal) return;
+  DOM.saveShareFormPanel?.classList.remove("hidden");
+  DOM.saveShareSuccessPanel?.classList.add("hidden");
+  if (DOM.saveShareError) {
+    DOM.saveShareError.classList.add("hidden");
+    DOM.saveShareError.textContent = "";
+  }
+}
+
+function openSaveShareModal() {
+  if (state.isViewer || typeof SupabaseBracket === "undefined" || !SupabaseBracket.isConfigured()) {
+    showToast(saveShareErrorMessage("not_configured"), true);
+    return;
+  }
+  resetSaveShareModalPanels();
+  if (DOM.inputSaveNickname) {
+    const seed = state.userName ? SupabaseBracket.normalizeNickname(state.userName) : "";
+    DOM.inputSaveNickname.value = SupabaseBracket.isValidNickname(seed) ? seed : "";
+  }
+  if (DOM.inputSavePin) DOM.inputSavePin.value = "";
+  DOM.saveShareModal?.classList.remove("hidden");
+}
+
+function closeSaveShareModal() {
+  DOM.saveShareModal?.classList.add("hidden");
+}
+
+async function submitCurrentBracketOnline() {
+  if (!DOM.btnSubmitSaveShare) return;
+  const nickname = DOM.inputSaveNickname?.value || "";
+  const pin = DOM.inputSavePin?.value || "";
+  const payload = BracketShare.payloadFromSimulatorState(state);
+
+  DOM.btnSubmitSaveShare.disabled = true;
+  const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
+  DOM.btnSubmitSaveShare.disabled = false;
+
+  if (!result.ok) {
+    if (DOM.saveShareError) {
+      DOM.saveShareError.textContent = saveShareErrorMessage(result.error);
+      DOM.saveShareError.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (DOM.txtSaveShareLink) DOM.txtSaveShareLink.value = result.url;
+  DOM.saveShareFormPanel?.classList.add("hidden");
+  DOM.saveShareSuccessPanel?.classList.remove("hidden");
+  showToast("Bracket saved to the leaderboard!");
+  renderLeaderboard();
+}
+
+async function renderLeaderboard() {
+  if (!DOM.leaderboardList) return;
+
+  const configured = typeof SupabaseBracket !== "undefined" && SupabaseBracket.isConfigured();
+  if (DOM.leaderboardUnconfigured) {
+    DOM.leaderboardUnconfigured.classList.toggle("hidden", configured);
+  }
+  if (!configured) {
+    DOM.leaderboardList.innerHTML = "";
+    return;
+  }
+
+  DOM.leaderboardList.innerHTML = `<p class="sidebar-help-text">Loading leaderboard…</p>`;
+  const result = await SupabaseBracket.listBrackets();
+
+  if (!result.ok) {
+    DOM.leaderboardList.innerHTML = `<p class="save-share-error">${saveShareErrorMessage(result.error)}</p>`;
+    return;
+  }
+
+  if (!result.brackets.length) {
+    DOM.leaderboardList.innerHTML = `<p class="sidebar-help-text">No saved brackets yet. Complete a prediction and be the first!</p>`;
+    return;
+  }
+
+  DOM.leaderboardList.innerHTML = "";
+  result.brackets.forEach((row) => {
+    const href = SupabaseBracket.buildSubmittedBracketUrl(row.nickname);
+    const timeLabel = row.updated_at
+      ? new Date(row.updated_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+      : "";
+    const link = document.createElement("a");
+    link.className = "leaderboard-row";
+    link.href = href;
+    link.innerHTML = `
+      <div class="leaderboard-row-main">
+        <span class="leaderboard-nick">@${row.nickname}</span>
+        <span class="leaderboard-champ">${row.champion || "—"}</span>
+      </div>
+      <span class="leaderboard-time">${timeLabel}</span>
+    `;
+    DOM.leaderboardList.appendChild(link);
+  });
+}
+
+async function loadSubmittedBracketFromUrl() {
+  if (typeof SupabaseBracket === "undefined" || !SupabaseBracket.isConfigured()) return false;
+
+  const nickname = SupabaseBracket.extractBracketNicknameFromPage();
+  if (!nickname) return false;
+
+  const result = await SupabaseBracket.getBracket(nickname);
+  if (!result.ok) {
+    if (result.error === "not_found") {
+      showToast(saveShareErrorMessage("not_found"), true);
+    } else {
+      showToast(saveShareErrorMessage(result.error), true);
+    }
+    return false;
+  }
+
+  BracketShare.applyPayloadToState(state, result.payload);
+  if (!state.userName) state.userName = result.nickname;
+  enterSharedViewerMode();
+  showToast(`Loaded @${result.nickname}'s bracket`);
+  return true;
+}
+
+function bindSupabaseUi() {
+  if (DOM.btnPodiumSaveShare) {
+    DOM.btnPodiumSaveShare.addEventListener("click", openSaveShareModal);
+  }
+  if (DOM.btnCloseSaveShare) {
+    DOM.btnCloseSaveShare.addEventListener("click", closeSaveShareModal);
+  }
+  if (DOM.btnSubmitSaveShare) {
+    DOM.btnSubmitSaveShare.addEventListener("click", () => {
+      void submitCurrentBracketOnline();
+    });
+  }
+  if (DOM.btnCopySaveShareLink) {
+    DOM.btnCopySaveShareLink.addEventListener("click", () => {
+      DOM.txtSaveShareLink?.select();
+      document.execCommand("copy");
+      showToast("Link copied to clipboard!");
+    });
+  }
+  if (DOM.btnSaveShareDone) {
+    DOM.btnSaveShareDone.addEventListener("click", closeSaveShareModal);
+  }
+  if (DOM.btnRefreshLeaderboard) {
+    DOM.btnRefreshLeaderboard.addEventListener("click", () => {
+      void renderLeaderboard();
+    });
+  }
+  if (DOM.btnShowLeaderboard) {
+    DOM.btnShowLeaderboard.addEventListener("click", () => {
+      switchWizardStep("welcome");
+      setTimeout(() => {
+        DOM.leaderboardSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    });
+  }
 }
 
 // Sidebar Settings
@@ -2141,7 +2093,7 @@ async function fetchAICommentary(matchKey, teamAId, teamBId, contentEl) {
   contentEl.classList.remove("hidden");
 
   // Fallback if no API key is specified
-  if (!state.anthropicKey || state.anthropicKey.trim() === "") {
+  if (!getAnthropicKey().trim()) {
     // Generate deterministic rich local facts
     setTimeout(() => {
       const commentary = generateLocalCommentaryFallback(teamAId, teamBId);
@@ -2157,7 +2109,7 @@ async function fetchAICommentary(matchKey, teamAId, teamBId, contentEl) {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "x-api-key": state.anthropicKey,
+        "x-api-key": getAnthropicKey(),
         "anthropic-version": "2023-06-01",
         "anthropic-dangerous-api-key-allowed": "true",
         "content-type": "application/json"
@@ -2788,7 +2740,16 @@ function renderAccuracyBreakdown() {
 
 
 // --- 15. BOOT ENGINE & HASH PARSER ---
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  initDOM();
+
+  if (typeof SupabaseBracket !== "undefined") {
+    SupabaseBracket.initSupabase();
+  }
+
+  bindSupabaseUi();
+  void renderLeaderboard();
+
   initDefaultState();
   
   // Try loading from localStorage first (persistence)
@@ -2809,6 +2770,8 @@ window.addEventListener("DOMContentLoaded", () => {
     } else {
       showToast("Could not read this share link.", true);
     }
+  } else {
+    await loadSubmittedBracketFromUrl();
   }
 
   // Set active tab hooks
@@ -2896,7 +2859,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Settings Modal controls
   if (DOM.btnShowSettings) {
     DOM.btnShowSettings.addEventListener("click", () => {
-      DOM.txtApiKey.value = state.anthropicKey || "";
+      DOM.txtApiKey.value = getAnthropicKey();
       DOM.settingsModal.classList.remove("hidden");
     });
   }
@@ -2909,8 +2872,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (DOM.btnSaveSettings) {
     DOM.btnSaveSettings.addEventListener("click", () => {
-      state.anthropicKey = DOM.txtApiKey.value.trim();
-      localStorage.setItem("anthropic_key", state.anthropicKey);
+      setAnthropicKey(DOM.txtApiKey.value.trim());
       DOM.settingsModal.classList.add("hidden");
       showToast("Anthropic API Key saved successfully!");
     });
@@ -2918,7 +2880,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (DOM.btnClearSettings) {
     DOM.btnClearSettings.addEventListener("click", () => {
-      state.anthropicKey = "";
+      setAnthropicKey("");
       localStorage.removeItem("anthropic_key");
       DOM.txtApiKey.value = "";
       DOM.settingsModal.classList.add("hidden");

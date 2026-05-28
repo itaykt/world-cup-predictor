@@ -123,12 +123,12 @@ describe("BracketShare.applyPayloadToState / payloadFromSimulatorState", () => {
 });
 
 describe("BracketShare.buildBracketViewUrl", () => {
-  it("points to index.html with share hash on GitHub Pages paths", () => {
+  it("points to swipe.html with share hash on GitHub Pages paths", () => {
     const url = BracketShare.buildBracketViewUrl(
       samplePayload,
       "https://user.github.io/world-cup-predictor/swipe.html"
     );
-    expect(url).toMatch(/index\.html#share=/);
+    expect(url).toMatch(/swipe\.html#share=/);
     expect(url.startsWith("https://user.github.io/world-cup-predictor/")).toBe(true);
 
     const roundtrip = BracketShare.decodeShareCode(url.split("#share=")[1]);

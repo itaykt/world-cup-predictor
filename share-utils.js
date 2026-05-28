@@ -88,10 +88,11 @@
     return null;
   }
 
-  /** Build index.html#share=… relative to the current page (works on GitHub Pages). */
+  /** Build swipe.html#share=… relative to the current page (works on GitHub Pages). */
   function buildBracketViewUrl(payload, currentHref) {
     const encoded = encodePayload(payload);
-    const url = new URL("index.html", currentHref || window.location.href);
+    const url = new URL("swipe.html", currentHref || window.location.href);
+    url.search = "";
     url.hash = `share=${encoded}`;
     return url.href;
   }

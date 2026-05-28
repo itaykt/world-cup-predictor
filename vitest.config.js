@@ -6,7 +6,7 @@ export default defineConfig({
     include: ["tests/**/*.test.js"],
     coverage: {
       provider: "v8",
-      include: ["share-utils.js"],
+      include: ["share-utils.js", "tournament-standings.js", "data.js", "supabase-utils.js"],
       reporter: ["text", "lcov"]
     }
   }

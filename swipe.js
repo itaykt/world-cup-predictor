@@ -3,103 +3,9 @@
   Gesture Tracking, background Standings Calculator & State Coordinator
 */
 
-// --- 1. TEAMS DATABASE & STAGES DRAW SCHEDULES ---
-const TEAMS_DB = {
-  // Group A
-  mex: { name: "Mexico", flag: "🇲🇽", rank: 15, stars: ["Santiago Giménez", "Edson Álvarez", "Luis Chávez"], history: "Co-hosts seeking to break the fifth-game curse." },
-  rsa: { name: "South Africa", flag: "🇿🇦", rank: 59, stars: ["Percy Tau", "Teboho Mokoena", "Lyle Foster"], history: "Bafana Bafana returning to capture the magic of 2010." },
-  kor: { name: "South Korea", flag: "🇰🇷", rank: 22, stars: ["Son Heung-min", "Kim Min-jae", "Lee Kang-in"], history: "Taegeuk Warriors looking to replicate 2002." },
-  cze: { name: "Czechia", flag: "🇨🇿", rank: 40, stars: ["Patrik Schick", "Tomáš Souček", "Adam Hložek"], history: "Tactically rigid European side looking to surprise." },
-  // Group B
-  can: { name: "Canada", flag: "🇨🇦", rank: 48, stars: ["Alphonso Davies", "Jonathan David", "Tajon Buchanan"], history: "Co-hosts seeking first-ever knockout phase appearance." },
-  bih: { name: "Bosnia & Herz.", flag: "🇧🇦", rank: 74, stars: ["Edin Džeko", "Miralem Pjanić", "Sead Kolašinac"], history: "Golden generation veterans aiming for one last tournament highlight." },
-  qat: { name: "Qatar", flag: "🇶🇦", rank: 37, stars: ["Akram Afif", "Almoez Ali", "Boualem Khoukhi"], history: "Recent Asian champions hoping to prove their mettle." },
-  sui: { name: "Switzerland", flag: "🇨🇭", rank: 19, stars: ["Granit Xhaka", "Manuel Akanji", "Breel Embolo"], history: "Famous for their giant-killing knockout capabilities." },
-  // Group C
-  bra: { name: "Brazil", flag: "🇧🇷", rank: 5, stars: ["Vinícius Júnior", "Rodrygo", "Neymar Jr"], history: "Five-time champions hunting relentlessly for their sixth star." },
-  mar: { name: "Morocco", flag: "🇲🇦", rank: 13, stars: ["Achraf Hakimi", "Yassine Bounou", "Sofyan Amrabat"], history: "Historic 2022 semi-finalists proving they belong." },
-  hai: { name: "Haiti", flag: "🇭🇹", rank: 86, stars: ["Frantzdy Pierrot", "Duckens Nazon", "Derrick Etienne"], history: "Caribbean underdogs looking to create monumental upsets." },
-  sco: { name: "Scotland", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", rank: 36, stars: ["Scott McTominay", "John McGinn", "Andrew Robertson"], history: "Passionate squad aiming for historic group stage progression." },
-  // Group D
-  usa: { name: "United States", flag: "🇺🇸", rank: 11, stars: ["Christian Pulisic", "Weston McKennie", "Folarin Balogun"], history: "Co-hosts with an athletic young core primed for a deep run." },
-  par: { name: "Paraguay", flag: "🇵🇾", rank: 56, stars: ["Miguel Almirón", "Julio Enciso", "Gustavo Gómez"], history: "Resilient South American side anchored by defensive grit." },
-  aus: { name: "Australia", flag: "🇦🇺", rank: 23, stars: ["Mathew Ryan", "Craig Goodwin", "Jackson Irvine"], history: "Socceroos hoping to build on impressive 2022 run." },
-  tur: { name: "Türkiye", flag: "🇹🇷", rank: 26, stars: ["Hakan Çalhanoğlu", "Arda Güler", "Kenan Yıldız"], history: "Exciting young generation dreaming of repeating 2002." },
-  // Group E
-  ger: { name: "Germany", flag: "🇩🇪", rank: 16, stars: ["Florian Wirtz", "Jamal Musiala", "Kai Havertz"], history: "Four-time champions rebuilding with world-class young playmakers." },
-  cuw: { name: "Curaçao", flag: "🇨🇼", rank: 91, stars: ["Juninho Bacuna", "Leandro Bacuna", "Rangelo Janga"], history: "Caribbean islanders seeking to make their first big splash." },
-  civ: { name: "Côte d'Ivoire", flag: "🇨🇮", rank: 38, stars: ["Sébastien Haller", "Franck Kessié", "Simon Adingra"], history: "Recent African champions possessing elite physical speed." },
-  ecu: { name: "Ecuador", flag: "🇪🇨", rank: 31, stars: ["Moisés Caicedo", "Piero Hincapié", "Enner Valencia"], history: "Fearless Andean side with high altitude pace and resilience." },
-  // Group F
-  ned: { name: "Netherlands", flag: "🇳🇱", rank: 7, stars: ["Virgil van Dijk", "Cody Gakpo", "Frenkie de Jong"], history: "Oranje seeking to break their three-time finalist bridesmaid curse." },
-  jpn: { name: "Japan", flag: "🇯🇵", rank: 18, stars: ["Kaoru Mitoma", "Takefusa Kubo", "Wataru Endo"], history: "Samurai Blue boasting high-octane press and precision." },
-  swe: { name: "Sweden", flag: "🇸🇪", rank: 28, stars: ["Alexander Isak", "Dejan Kulusevski", "Viktor Gyökeres"], history: "Attackers looking to power a deep knockout run." },
-  tun: { name: "Tunisia", flag: "🇹🇳", rank: 41, stars: ["Aissa Laïdouni", "Ellyes Skhiri", "Youssef Msakni"], history: "Carthage Eagles famous for defensive solidness." },
-  // Group G
-  bel: { name: "Belgium", flag: "🇧🇪", rank: 3, stars: ["Kevin De Bruyne", "Romelu Lukaku", "Jérémy Doku"], history: "Red Devils blending veteran geniuses with explosive wingers." },
-  egy: { name: "Egypt", flag: "🇪🇬", rank: 30, stars: ["Mohamed Salah", "Mostafa Mohamed", "Omar Marmoush"], history: "Pharaohs led by a legendary winger hungry for global glory." },
-  irn: { name: "IR Iran", flag: "🇮🇷", rank: 20, stars: ["Mehdi Taremi", "Sardar Azmoun", "Alireza Jahanbakhsh"], history: "Asian powerhouse featuring a lethal strike partnership." },
-  nzl: { name: "New Zealand", flag: "🇳🇿", rank: 104, stars: ["Chris Wood", "Liberato Cacace", "Sarpreet Singh"], history: "OFC champions aiming to repeat 2010 undefeated run." },
-  // Group H
-  esp: { name: "Spain", flag: "🇪🇸", rank: 8, stars: ["Lamine Yamal", "Rodri", "Nico Williams"], history: "European champions playing breathtaking, modern football." },
-  cpv: { name: "Cabo Verde", flag: "🇨🇻", rank: 65, stars: ["Ryan Mendes", "Garry Rodrigues", "Bebé"], history: "Blue Sharks seeking to continue giant-killing AFCON form." },
-  ksa: { name: "Saudi Arabia", flag: "🇸🇦", rank: 53, stars: ["Salem Al-Dawsari", "Firas Al-Buraikan", "Abdulrahman Ghareeb"], history: "Remembered for upsetting Argentina in 2022." },
-  ury: { name: "Uruguay", flag: "🇺🇾", rank: 14, stars: ["Federico Valverde", "Darwin Núñez", "Luis Suárez"], history: "Relentless high-press and legendary defensive grit." },
-  // Group I
-  fra: { name: "France", flag: "🇫🇷", rank: 2, stars: ["Kylian Mbappé", "Antoine Griezmann", "William Saliba"], history: "Pre-tournament favorites loaded with world-class depth." },
-  sen: { name: "Senegal", flag: "🇸🇳", rank: 17, stars: ["Sadio Mané", "Nicolas Jackson", "Kalidou Koulibaly"], history: "Lions of Teranga looking to make Africa proud." },
-  irq: { name: "Iraq", flag: "🇮🇶", rank: 58, stars: ["Aymen Hussein", "Ali Jasim", "Zidane Iqbal"], history: "Lions of Mesopotamia returning with dangerous attackers." },
-  nor: { name: "Norway", flag: "🇳🇴", rank: 47, stars: ["Erling Haaland", "Martin Ødegaard", "Oscar Bobb"], history: "Boasting the world's most lethal striker and playmaker." },
-  // Group J
-  arg: { name: "Argentina", flag: "🇦🇷", rank: 1, stars: ["Lionel Messi", "Lautaro Martínez", "Julián Álvarez"], history: "Defending champions seeking Messi's perfect farewell." },
-  dza: { name: "Algeria", flag: "🇩🇿", rank: 43, stars: ["Riyad Mahrez", "Saïd Benrahma", "Amine Gouiri"], history: "Desert Foxes possessing technical brilliance." },
-  aut: { name: "Austria", flag: "🇦🇹", rank: 25, stars: ["Marcel Sabitzer", "Konrad Laimer", "Christoph Baumgartner"], history: "Intense high-pressing machine engineered for dominance." },
-  jor: { name: "Jordan", flag: "🇯🇴", rank: 71, stars: ["Musa Al-Taamari", "Yazan Al-Naimat", "Ali Olwan"], history: "Surprise Asian Cup finalists ready to surprise." },
-  // Group K
-  por: { name: "Portugal", flag: "🇵🇹", rank: 6, stars: ["Cristiano Ronaldo", "Bruno Fernandes", "Rafael Leão"], history: "Superstar roster led by their record-breaking captain." },
-  cod: { name: "DR Congo", flag: "🇨🇩", rank: 61, stars: ["Chancel Mbemba", "Yoane Wissa", "Meschack Elia"], history: "Direct side capable of tearing apart open defenses." },
-  uzb: { name: "Uzbekistan", flag: "🇺🇿", rank: 64, stars: ["Eldor Shomurodov", "Abbosbek Fayzullaev", "Oston Urunov"], history: "Rising Asian stars featuring high-tempo organization." },
-  col: { name: "Colombia", flag: "🇨🇴", rank: 12, stars: ["James Rodríguez", "Luis Díaz", "Jhon Durán"], history: "Playing spectacular high-flair South American football." },
-  // Group L
-  eng: { name: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", rank: 4, stars: ["Harry Kane", "Jude Bellingham", "Bukayo Saka"], history: "Desperate to bring football home with a superstar roster." },
-  cro: { name: "Croatia", flag: "🇭🇷", rank: 10, stars: ["Luka Modrić", "Mateo Kovačić", "Joško Gvardiol"], history: "Midfield masters aiming for one last historic run." },
-  gha: { name: "Ghana", flag: "🇬🇭", rank: 68, stars: ["Mohammed Kudus", "Inaki Williams", "Thomas Partey"], history: "Black Stars hoping to repeat their iconic 2010 run." },
-  pan: { name: "Panama", flag: "🇵🇦", rank: 45, stars: ["Adalberto Carrasquilla", "Michael Amir Murillo", "José Fajardo"], history: "Resilient CONCACAF side with a disciplined low-block." }
-};
-
-const GROUPS_DATA = {
-  A: ["mex", "rsa", "kor", "cze"],
-  B: ["can", "bih", "qat", "sui"],
-  C: ["bra", "mar", "hai", "sco"],
-  D: ["usa", "par", "aus", "tur"],
-  E: ["ger", "cuw", "civ", "ecu"],
-  F: ["ned", "jpn", "swe", "tun"],
-  G: ["bel", "egy", "irn", "nzl"],
-  H: ["esp", "cpv", "ksa", "ury"],
-  I: ["fra", "sen", "irq", "nor"],
-  J: ["arg", "dza", "aut", "jor"],
-  K: ["por", "cod", "uzb", "col"],
-  L: ["eng", "cro", "gha", "pan"]
-};
-
-// Scheduler: Mapped identically to main app
-const GROUP_STAGE_MATCHES = (() => {
-  let md1 = [];
-  let md2 = [];
-  let md3 = [];
-
-  Object.keys(GROUPS_DATA).forEach(g => {
-    const teams = GROUPS_DATA[g];
-    md1.push({ group: g, teamA: teams[0], teamB: teams[1], matchIndex: 0 });
-    md1.push({ group: g, teamA: teams[2], teamB: teams[3], matchIndex: 1 });
-    md2.push({ group: g, teamA: teams[0], teamB: teams[2], matchIndex: 2 });
-    md2.push({ group: g, teamA: teams[1], teamB: teams[3], matchIndex: 3 });
-    md3.push({ group: g, teamA: teams[3], teamB: teams[0], matchIndex: 4 });
-    md3.push({ group: g, teamA: teams[1], teamB: teams[2], matchIndex: 5 });
-  });
-
-  return [...md1, ...md2, ...md3]; // Flat schedule of all 72 Group matches
-})();
+const TEAMS_DB = TournamentData.TEAMS_DB;
+const GROUPS_DATA = TournamentData.GROUPS_DATA;
+const GROUP_STAGE_MATCHES = TournamentData.GROUP_STAGE_MATCHES_FLAT;
 
 // Knockout matches resolution matching index.html
 const KNOCKOUT_MATCHES = {
@@ -168,7 +74,7 @@ let state = {
   goalscorers: {},
   savedBrackets: [],
   actualResults: null,
-  anthropicKey: ""
+  isViewer: false
 };
 
 // Global history array for state-snapshotting undo stack
@@ -197,6 +103,7 @@ const DOM = {
   paneSwipeWelcome: document.getElementById("pane-swipe-welcome"),
   paneSwipeDeck: document.getElementById("pane-swipe-deck"),
   paneSwipePodium: document.getElementById("pane-swipe-podium"),
+  paneBracketView: document.getElementById("pane-bracket-view"),
   
   appHeaderTitle: document.getElementById("app-header-title"),
   stepperStageTitle: document.getElementById("stepper-stage-title"),
@@ -229,13 +136,26 @@ const DOM = {
   quickUpsetMatch: document.getElementById("quick-upset-match"),
   
   btnShareResults: document.getElementById("btn-share-results"),
-  btnGoToMainBracket: document.getElementById("btn-go-to-main-bracket"),
-  btnRestartSwipe: document.getElementById("btn-restart-swipe")
+  btnViewBracket: document.getElementById("btn-view-bracket"),
+  btnSaveLeaderboard: document.getElementById("btn-save-leaderboard"),
+  btnBackFromBracket: document.getElementById("btn-back-from-bracket"),
+  bracketViewTitle: document.getElementById("bracket-view-title"),
+  bracketViewGroups: document.getElementById("bracket-view-groups"),
+  bracketViewKnockout: document.getElementById("bracket-view-knockout"),
+  btnRestartSwipe: document.getElementById("btn-restart-swipe"),
+
+  saveShareModal: document.getElementById("save-share-modal"),
+  btnCloseSaveShare: document.getElementById("btn-close-save-share"),
+  inputSaveNickname: document.getElementById("input-save-nickname"),
+  inputSavePin: document.getElementById("input-save-pin"),
+  saveShareError: document.getElementById("save-share-error"),
+  btnSubmitSaveShare: document.getElementById("btn-submit-save-share")
 };
 
 // --- INITIALIZE & LOCAL STORAGE PERSISTENCE ---
 function initDefaultState() {
   state.wizardStep = "welcome";
+  state.isViewer = false;
   state.userName = "";
   state.groupMatchScores = {};
   state.knockoutScores = {};
@@ -270,7 +190,6 @@ function loadFromLocalStorage() {
       state.goalscorers = data.goalscorers || {};
       state.savedBrackets = data.savedBrackets || [];
       state.actualResults = data.actualResults || null;
-      state.anthropicKey = data.anthropicKey || localStorage.getItem("anthropic_key") || "";
       
       // CRITICAL SAFETY SHIELD: Ensure standings arrays exist and have elements to prevent resolution crashes
       for (const g of Object.keys(GROUPS_DATA)) {
@@ -299,110 +218,9 @@ function showToast(msg, isErr = false) {
 
 // --- 4. WORLD CUP CALCULATIONS ENGINE (GROUP TIEBREAKS & STANDINGS) ---
 function recalculateStandings() {
-  Object.keys(GROUPS_DATA).forEach(gLetter => {
-    const teams = GROUPS_DATA[gLetter];
-    const stats = {};
-    teams.forEach(t => {
-      stats[t] = { teamId: t, pts: 0, gd: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0 };
-    });
-
-    GROUP_STAGE_MATCHES.forEach(m => {
-      if (m.group === gLetter) {
-        const key = `${gLetter}_${m.matchIndex}`;
-        const score = state.groupMatchScores[key];
-        if (score && score.scoreA !== "" && score.scoreB !== "") {
-          const sA = parseInt(score.scoreA);
-          const sB = parseInt(score.scoreB);
-          
-          stats[m.teamA].gf += sA;
-          stats[m.teamA].ga += sB;
-          stats[m.teamA].gd += (sA - sB);
-          
-          stats[m.teamB].gf += sB;
-          stats[m.teamB].ga += sA;
-          stats[m.teamB].gd += (sB - sA);
-
-          if (sA > sB) {
-            stats[m.teamA].pts += 3;
-            stats[m.teamA].w++;
-            stats[m.teamB].l++;
-          } else if (sB > sA) {
-            stats[m.teamB].pts += 3;
-            stats[m.teamB].w++;
-            stats[m.teamA].l++;
-          } else {
-            stats[m.teamA].pts += 1;
-            stats[m.teamB].pts += 1;
-            stats[m.teamA].d++;
-            stats[m.teamB].d++;
-          }
-        }
-      }
-    });
-
-    const sorted = Object.values(stats).sort((a, b) => {
-      if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.gd !== a.gd) return b.gd - a.gd;
-      if (b.gf !== a.gf) return b.gf - a.gf;
-      return TEAMS_DB[a.teamId].rank - TEAMS_DB[b.teamId].rank; // Rank tiebreaker
-    });
-
-    state.groupStandings[gLetter] = sorted.map(s => s.teamId);
-  });
-
-  calculateTop8Wildcards();
-}
-
-function calculateThirdPlacedList() {
-  const thirdsList = [];
-  
-  Object.keys(GROUPS_DATA).forEach(gLetter => {
-    const thirdTeamId = state.groupStandings[gLetter][2]; // 3rd placed team
-    const stats = { teamId: thirdTeamId, pts: 0, gd: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0 };
-    
-    GROUP_STAGE_MATCHES.forEach(m => {
-      if (m.group === gLetter && (m.teamA === thirdTeamId || m.teamB === thirdTeamId)) {
-        const key = `${gLetter}_${m.matchIndex}`;
-        const score = state.groupMatchScores[key];
-        if (score && score.scoreA !== "" && score.scoreB !== "") {
-          const sA = parseInt(score.scoreA);
-          const sB = parseInt(score.scoreB);
-          const isA = (m.teamA === thirdTeamId);
-          const myScore = isA ? sA : sB;
-          const oppScore = isA ? sB : sA;
-          
-          stats.gf += myScore;
-          stats.ga += oppScore;
-          stats.gd += (myScore - oppScore);
-          
-          if (myScore > oppScore) {
-            stats.w++;
-            stats.pts += 3;
-          } else if (oppScore > myScore) {
-            stats.l++;
-          } else {
-            stats.d++;
-            stats.pts += 1;
-          }
-        }
-      }
-    });
-    thirdsList.push(stats);
-  });
-
-  thirdsList.sort((a, b) => {
-    if (b.pts !== a.pts) return b.pts - a.pts;
-    if (b.gd !== a.gd) return b.gd - a.gd;
-    if (b.gf !== a.gf) return b.gf - a.gf;
-    return TEAMS_DB[a.teamId].rank - TEAMS_DB[b.teamId].rank;
-  });
-
-  return thirdsList;
-}
-
-function calculateTop8Wildcards() {
-  const list = calculateThirdPlacedList();
-  state.thirdPlaceQualifiers = list.slice(0, 8).map(l => l.teamId);
+  const result = TournamentStandings.recalculate(state.groupMatchScores);
+  state.groupStandings = result.groupStandings;
+  state.thirdPlaceQualifiers = result.thirdPlaceQualifiers;
 }
 
 // --- 5. PROGRESS & CURRENT MATCH COORDINATOR ---
@@ -1076,11 +894,12 @@ function revealPodiumChampionship() {
       DOM.btnRestartSwipe.style.padding = "14px";
       DOM.btnRestartSwipe.style.fontWeight = "700";
     }
-    // Hide controls that are irrelevant to read-only viewers
+    if (DOM.btnShareResults) DOM.btnShareResults.classList.add("hidden");
+    if (DOM.btnSaveLeaderboard) DOM.btnSaveLeaderboard.classList.add("hidden");
     if (DOM.btnUndo) DOM.btnUndo.classList.add("hidden");
     if (DOM.btnReset) DOM.btnReset.classList.add("hidden");
-    if (DOM.btnGoToMainBracket) DOM.btnGoToMainBracket.classList.add("hidden");
   } else {
+    if (DOM.btnShareResults) DOM.btnShareResults.classList.remove("hidden");
     if (DOM.btnRestartSwipe) {
       DOM.btnRestartSwipe.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Swipe New Bracket`;
       DOM.btnRestartSwipe.className = "btn btn-secondary btn-sm";
@@ -1089,21 +908,224 @@ function revealPodiumChampionship() {
     }
     if (DOM.btnUndo) DOM.btnUndo.classList.remove("hidden");
     if (DOM.btnReset) DOM.btnReset.classList.remove("hidden");
-    if (DOM.btnGoToMainBracket) DOM.btnGoToMainBracket.classList.remove("hidden");
+  }
+  updateSupabaseSaveButton();
+}
+
+function updateSupabaseSaveButton() {
+  if (!DOM.btnSaveLeaderboard) return;
+  const canSave =
+    !state.isViewer &&
+    typeof SupabaseBracket !== "undefined" &&
+    SupabaseBracket.isConfigured();
+  DOM.btnSaveLeaderboard.classList.toggle("hidden", !canSave);
+}
+
+function isLegacyKnockoutOnly() {
+  const hasGroupScores = Object.keys(state.groupMatchScores).some((key) => {
+    const score = state.groupMatchScores[key];
+    return score && score.scoreA !== "" && score.scoreB !== "";
+  });
+  return !hasGroupScores && Object.keys(state.knockoutPicks).length > 0;
+}
+
+function showSwipePane(activePane) {
+  [DOM.paneSwipeWelcome, DOM.paneSwipeDeck, DOM.paneSwipePodium, DOM.paneBracketView].forEach((pane) => {
+    if (pane) pane.classList.add("hidden");
+  });
+  if (activePane) activePane.classList.remove("hidden");
+}
+
+function renderSimpleBracketView() {
+  recalculateStandings();
+  const name = state.userName || "Prediction";
+  const label = name.endsWith("s") ? `${name}'` : `${name}'s`;
+  if (DOM.bracketViewTitle) {
+    DOM.bracketViewTitle.textContent = state.isViewer ? `${label} bracket` : "Your bracket";
+  }
+
+  if (typeof BracketView === "undefined") return;
+
+  BracketView.render({
+    groupsEl: DOM.bracketViewGroups,
+    knockoutEl: DOM.bracketViewKnockout,
+    teamsDb: TEAMS_DB,
+    groupsData: GROUPS_DATA,
+    groupStandings: state.groupStandings,
+    groupMatchScores: state.groupMatchScores,
+    groupMatchesFlat: GROUP_STAGE_MATCHES,
+    legacyKnockoutOnly: isLegacyKnockoutOnly(),
+    knockoutPicks: state.knockoutPicks,
+    knockoutScores: state.knockoutScores,
+    resolveMatch: (mId) => (KNOCKOUT_MATCHES[mId] ? KNOCKOUT_MATCHES[mId].resolve() : null),
+    getStandingStats: (gLetter, teamId) =>
+      TournamentStandings.getTeamSummaryStats(gLetter, teamId, state.groupMatchScores)
+  });
+}
+
+function openBracketView() {
+  renderSimpleBracketView();
+  showSwipePane(DOM.paneBracketView);
+}
+
+function enterViewerMode() {
+  state.isViewer = true;
+  document.body.classList.add("viewer-mode");
+  recalculateStandings();
+  revealPodiumChampionship();
+  showSwipePane(DOM.paneSwipePodium);
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("view") === "bracket") {
+    openBracketView();
   }
 }
 
-// --- 11. EVENT REGISTRATION DOMCONTENTLOADED ---
-window.addEventListener("DOMContentLoaded", () => {
-  // Shared links open the full bracket viewer on index.html (GitHub Pages friendly)
+async function tryLoadSharedOrSavedBracket() {
   const shareCode = typeof BracketShare !== "undefined" ? BracketShare.extractShareCodeFromPage() : null;
   if (shareCode) {
     const result = BracketShare.decodeShareCode(shareCode);
     if (result.ok) {
-      window.location.replace(BracketShare.buildBracketViewUrl(result.payload, window.location.href));
-      return;
+      BracketShare.applyPayloadToState(state, result.payload);
+      enterViewerMode();
+      showToast("Shared prediction loaded");
+      return true;
     }
-    showToast("Invalid shared link", true);
+    showToast("Invalid share link", true);
+    return true;
+  }
+
+  if (typeof SupabaseBracket !== "undefined" && SupabaseBracket.isConfigured()) {
+    const nickname = SupabaseBracket.extractBracketNicknameFromPage();
+    if (nickname) {
+      const result = await SupabaseBracket.getBracket(nickname);
+      if (result.ok) {
+        BracketShare.applyPayloadToState(state, result.payload);
+        if (!state.userName) state.userName = result.nickname;
+        enterViewerMode();
+        showToast(`Loaded @${result.nickname}'s bracket`);
+        return true;
+      }
+      showToast("Bracket not found", true);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function saveShareErrorMessage(code) {
+  const map = {
+    wrong_pin: "Wrong PIN for this nickname.",
+    invalid_nickname: "Nickname must be 2–20 characters (letters, numbers, underscore).",
+    invalid_pin: "PIN must be exactly 4 digits.",
+    not_configured: "Online save is not configured."
+  };
+  return map[code] || "Could not save bracket.";
+}
+
+function openSwipeSaveShareModal() {
+  if (typeof SupabaseBracket === "undefined" || !SupabaseBracket.isConfigured()) {
+    return false;
+  }
+  if (DOM.saveShareError) {
+    DOM.saveShareError.classList.add("hidden");
+    DOM.saveShareError.textContent = "";
+  }
+  if (DOM.inputSaveNickname) {
+    const seed = state.userName ? SupabaseBracket.normalizeNickname(state.userName) : "";
+    DOM.inputSaveNickname.value = SupabaseBracket.isValidNickname(seed) ? seed : "";
+  }
+  if (DOM.inputSavePin) DOM.inputSavePin.value = "";
+  DOM.saveShareModal?.classList.remove("hidden");
+  return true;
+}
+
+function closeSwipeSaveShareModal() {
+  DOM.saveShareModal?.classList.add("hidden");
+}
+
+async function performShareResults(shareUrlOverride) {
+  const name = state.userName || "My";
+  const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
+
+  const champId = state.knockoutPicks[104];
+  const runnerId = champId === KNOCKOUT_MATCHES[104].resolve().a ? KNOCKOUT_MATCHES[104].resolve().b : KNOCKOUT_MATCHES[104].resolve().a;
+  const thirdId = state.knockoutPicks[103];
+
+  const champ = TEAMS_DB[champId];
+  const runner = TEAMS_DB[runnerId];
+  const third = TEAMS_DB[thirdId];
+
+  let shareUrl = shareUrlOverride || "";
+  if (!shareUrl) {
+    try {
+      recalculateStandings();
+      const payload = BracketShare.payloadFromSimulatorState(state);
+      shareUrl = BracketShare.buildBracketViewUrl(payload, window.location.href);
+    } catch (err) {
+      console.error("Failed to generate share URL:", err);
+      shareUrl = new URL("index.html", window.location.href).href;
+    }
+  }
+
+  let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;
+  if (champ) text += `🥇 CHAMPION: ${champ.flag} ${champ.name.toUpperCase()}\n`;
+  if (runner) text += `🥈 RUNNER-UP: ${runner.flag} ${runner.name}\n`;
+  if (third) text += `🥉 THIRD PLACE: ${third.flag} ${third.name}\n\n`;
+
+  const sfTeams = [101, 102].map((mId) => {
+    const wId = state.knockoutPicks[mId];
+    return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
+  }).filter(Boolean);
+  if (sfTeams.length > 0) {
+    text += `🔥 SEMI-FINALISTS:\n• ${sfTeams.join("\n• ")}\n\n`;
+  }
+
+  const qfTeams = [97, 98, 99, 100].map((mId) => {
+    const wId = state.knockoutPicks[mId];
+    return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
+  }).filter(Boolean);
+  if (qfTeams.length > 0) {
+    text += `⚡ QUARTER-FINALISTS:\n• ${qfTeams.join("\n• ")}\n\n`;
+  }
+
+  text += `Simulated on Swipe Cup ⚽ Predict yours at: ${shareUrl}`;
+
+  const shareData = {
+    title: `${title} World Cup Prediction`,
+    text,
+    url: shareUrl
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      showToast("Shared successfully!");
+      return;
+    } catch (err) {
+      console.log("Share failed or cancelled", err);
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("📋 Results rundown copied to clipboard!");
+  } catch (err) {
+    console.error("Clipboard copy failed:", err);
+    showToast("Clipboard copy failed. Please copy manually.", true);
+  }
+}
+
+// --- 11. EVENT REGISTRATION DOMCONTENTLOADED ---
+window.addEventListener("DOMContentLoaded", async () => {
+  if (typeof SupabaseBracket !== "undefined") {
+    SupabaseBracket.initSupabase();
+  }
+
+  if (await tryLoadSharedOrSavedBracket()) {
+    updateSupabaseSaveButton();
+    return;
   }
 
   const loaded = loadFromLocalStorage();
@@ -1159,15 +1181,24 @@ window.addEventListener("DOMContentLoaded", () => {
     renderActiveCardDeck();
   });
 
-  DOM.btnGoToMainBracket.addEventListener("click", () => {
-    recalculateStandings();
-    state.wizardStep = "championship";
-    saveToLocalStorage();
-    showToast("Opening full bracket…");
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 400);
-  });
+  if (DOM.btnViewBracket) {
+    DOM.btnViewBracket.addEventListener("click", openBracketView);
+  }
+
+  if (DOM.btnBackFromBracket) {
+    DOM.btnBackFromBracket.addEventListener("click", () => {
+      showSwipePane(DOM.paneSwipePodium);
+    });
+  }
+
+  if (DOM.btnSaveLeaderboard) {
+    DOM.btnSaveLeaderboard.addEventListener("click", () => {
+      if (openSwipeSaveShareModal()) return;
+      showToast("Leaderboard save is not configured.", true);
+    });
+  }
+
+  updateSupabaseSaveButton();
 
   // Welcome screen name registration
   if (DOM.btnStartPrediction) {
@@ -1195,80 +1226,40 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Share Results CTR
+  if (DOM.btnCloseSaveShare) {
+    DOM.btnCloseSaveShare.addEventListener("click", closeSwipeSaveShareModal);
+  }
+
+  if (DOM.btnSubmitSaveShare) {
+    DOM.btnSubmitSaveShare.addEventListener("click", async () => {
+      const nickname = DOM.inputSaveNickname?.value || "";
+      const pin = DOM.inputSavePin?.value || "";
+      recalculateStandings();
+      const payload = BracketShare.payloadFromSimulatorState(state);
+
+      DOM.btnSubmitSaveShare.disabled = true;
+      const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
+      DOM.btnSubmitSaveShare.disabled = false;
+
+      if (!result.ok) {
+        if (DOM.saveShareError) {
+          DOM.saveShareError.textContent = saveShareErrorMessage(result.error);
+          DOM.saveShareError.classList.remove("hidden");
+        }
+        return;
+      }
+
+      closeSwipeSaveShareModal();
+      const shareUrl =
+        result.url || SupabaseBracket.buildSubmittedBracketUrl(result.nickname, window.location.href);
+      showToast("Bracket saved!");
+      await performShareResults(shareUrl);
+    });
+  }
+
   if (DOM.btnShareResults) {
     DOM.btnShareResults.addEventListener("click", async () => {
-      const name = state.userName || "My";
-      const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
-      
-      const champId = state.knockoutPicks[104];
-      const runnerId = champId === KNOCKOUT_MATCHES[104].resolve().a ? KNOCKOUT_MATCHES[104].resolve().b : KNOCKOUT_MATCHES[104].resolve().a;
-      const thirdId = state.knockoutPicks[103];
-
-      const champ = TEAMS_DB[champId];
-      const runner = TEAMS_DB[runnerId];
-      const third = TEAMS_DB[thirdId];
-
-      // Full bracket in URL hash — works on static GitHub Pages hosting
-      let shareUrl = "";
-      try {
-        recalculateStandings();
-        const payload = BracketShare.payloadFromSimulatorState(state);
-        shareUrl = BracketShare.buildBracketViewUrl(payload, window.location.href);
-      } catch (err) {
-        console.error("Failed to generate share URL:", err);
-        shareUrl = new URL("index.html", window.location.href).href;
-      }
-
-      let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;
-      if (champ) text += `🥇 CHAMPION: ${champ.flag} ${champ.name.toUpperCase()}\n`;
-      if (runner) text += `🥈 RUNNER-UP: ${runner.flag} ${runner.name}\n`;
-      if (third) text += `🥉 THIRD PLACE: ${third.flag} ${third.name}\n\n`;
-
-      // Semi-finalists (picks from 101, 102)
-      const sfTeams = [101, 102].map(mId => {
-        const wId = state.knockoutPicks[mId];
-        return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
-      }).filter(Boolean);
-      if (sfTeams.length > 0) {
-        text += `🔥 SEMI-FINALISTS:\n• ${sfTeams.join('\n• ')}\n\n`;
-      }
-
-      // Quarter-finalists (picks from 97, 98, 99, 100)
-      const qfTeams = [97, 98, 99, 100].map(mId => {
-        const wId = state.knockoutPicks[mId];
-        return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
-      }).filter(Boolean);
-      if (qfTeams.length > 0) {
-        text += `⚡ QUARTER-FINALISTS:\n• ${qfTeams.join('\n• ')}\n\n`;
-      }
-
-      text += `Simulated on Swipe Cup ⚽ Predict yours at: ${shareUrl}`;
-
-      const shareData = {
-        title: `${title} World Cup Prediction`,
-        text: text,
-        url: shareUrl
-      };
-
-      if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-          showToast("Shared successfully!");
-          return;
-        } catch (err) {
-          console.log("Share failed or cancelled", err);
-        }
-      }
-
-      // Clipboard fallback
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast("📋 Results rundown copied to clipboard!");
-      } catch (err) {
-        console.error("Clipboard copy failed:", err);
-        showToast("Clipboard copy failed. Please copy manually.", true);
-      }
+      await performShareResults(null);
     });
   }
 

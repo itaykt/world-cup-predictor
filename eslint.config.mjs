@@ -33,13 +33,15 @@ export default [
     }
   },
   {
-    files: ["share-utils.js"],
+    files: ["share-utils.js", "data.js", "tournament-standings.js", "supabase-utils.js", "bracket-view.js"],
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.node,
         module: "readonly",
-        exports: "readonly"
+        exports: "readonly",
+        require: "readonly",
+        globalThis: "readonly"
       }
     }
   },
@@ -48,7 +50,12 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
-        BracketShare: "readonly"
+        BracketShare: "readonly",
+        TournamentData: "readonly",
+        TournamentStandings: "readonly",
+        SupabaseBracket: "readonly",
+        supabase: "readonly",
+        BracketView: "readonly"
       }
     }
   }

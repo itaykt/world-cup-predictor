@@ -1314,6 +1314,123 @@ h1, h2, h3, h4, .wizard-stepper .step-node {
   margin-bottom: 15px;
 }
 
+/* Save & Share + Leaderboard */
+.save-share-field {
+  margin-bottom: 14px;
+}
+
+.save-share-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.save-share-field input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.field-hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.save-share-error {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+}
+
+.save-share-success-msg {
+  margin-bottom: 12px;
+}
+
+.leaderboard-widget {
+  margin-top: 15px;
+}
+
+.leaderboard-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.leaderboard-widget-header h4 {
+  margin: 0;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-smooth);
+}
+
+.leaderboard-row:hover {
+  border-color: var(--gold-500);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.leaderboard-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leaderboard-nick {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--gold-300);
+}
+
+.leaderboard-champ {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .share-link-input-row {
   display: flex;
   gap: 8px;
