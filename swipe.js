@@ -7,6 +7,18 @@ const TEAMS_DB = TournamentData.TEAMS_DB;
 const GROUPS_DATA = TournamentData.GROUPS_DATA;
 const GROUP_STAGE_MATCHES = TournamentData.GROUP_STAGE_MATCHES_FLAT;
 
+const APP_TITLE_DEFAULT = "Your 2026 World Cup, One Match at a Time";
+const SWIPE_INTRO_DISMISS_KEY = "wc_swipe_intro_seen_v1";
+const LOADING_LINES = [
+  "Warming up the teams…",
+  "Drawing the groups…",
+  "Checking the pitch…",
+  "Waiting for kickoff…",
+  "Building your bracket…"
+];
+const ERROR_KICKOFF_MSG =
+  "Something went wrong before kickoff. Refresh and we'll replay the match.";
+
 // Knockout matches resolution matching index.html
 const KNOCKOUT_MATCHES = {
   73: { label: "M73: Runner-up A vs Runner-up B", resolve: () => ({ a: state.groupStandings["A"][1], b: state.groupStandings["B"][1] }) },
@@ -154,8 +166,71 @@ const DOM = {
   inputSaveNickname: document.getElementById("input-save-nickname"),
   inputSavePin: document.getElementById("input-save-pin"),
   saveShareError: document.getElementById("save-share-error"),
-  btnSubmitSaveShare: document.getElementById("btn-submit-save-share")
+  btnSubmitSaveShare: document.getElementById("btn-submit-save-share"),
+
+  swipeIntroOverlay: document.getElementById("swipe-intro-overlay"),
+  btnDismissSwipeIntro: document.getElementById("btn-dismiss-swipe-intro"),
+  swipeIntroDraw: document.getElementById("swipe-intro-draw"),
+  swipeIntroKnockoutNote: document.getElementById("swipe-intro-knockout-note"),
+  deckLoadingMsg: document.getElementById("deck-loading-msg"),
+
+  podiumChaosPanel: document.getElementById("podium-chaos-panel"),
+  podiumChaosValue: document.getElementById("podium-chaos-value"),
+  bracketDnaList: document.getElementById("bracket-dna-list"),
+  pathToGloryRoute: document.getElementById("path-to-glory-route")
 };
+
+function pickLoadingLine() {
+  return LOADING_LINES[Math.floor(Math.random() * LOADING_LINES.length)];
+}
+
+function setDeckActiveMode(active) {
+  document.body.classList.toggle("deck-active", !!active);
+}
+
+function hasSeenSwipeIntro() {
+  try {
+    return localStorage.getItem(SWIPE_INTRO_DISMISS_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+
+function markSwipeIntroSeen() {
+  try {
+    localStorage.setItem(SWIPE_INTRO_DISMISS_KEY, "1");
+  } catch (e) {
+    console.warn("Could not persist swipe intro flag", e);
+  }
+}
+
+function showSwipeIntroIfNeeded() {
+  if (!DOM.swipeIntroOverlay || hasSeenSwipeIntro()) return;
+  DOM.swipeIntroOverlay.classList.remove("hidden");
+  updateSwipeIntroForStage();
+}
+
+function hideSwipeIntro() {
+  if (!DOM.swipeIntroOverlay) return;
+  DOM.swipeIntroOverlay.classList.add("hidden");
+  markSwipeIntroSeen();
+}
+
+function updateSwipeIntroForStage() {
+  const isGroups = cachedActiveMatch && cachedActiveMatch.stage === "groups";
+  if (DOM.swipeIntroDraw) {
+    DOM.swipeIntroDraw.classList.toggle("hidden", !isGroups);
+  }
+  if (DOM.swipeIntroKnockoutNote) {
+    DOM.swipeIntroKnockoutNote.classList.toggle("hidden", isGroups);
+  }
+}
+
+function bindSwipeIntroHandlers() {
+  if (DOM.btnDismissSwipeIntro) {
+    DOM.btnDismissSwipeIntro.addEventListener("click", hideSwipeIntro);
+  }
+}
 
 // --- INITIALIZE & LOCAL STORAGE PERSISTENCE ---
 const SWIPE_PROGRESS_KEY = "wc_2026_swipe_progress";
@@ -447,8 +522,7 @@ function dragMove(e) {
   const dX = clientX - startX;
   const dY = clientY - startY;
   
-  // rotation proportional to delta X
-  const rotation = dX * 0.08;
+  const rotation = dX * 0.12 + dY * 0.04;
   cardEl.style.transform = `translate(${dX}px, ${dY}px) rotate(${rotation}deg)`;
   
   // Show Stamps proportional to distance
@@ -524,7 +598,9 @@ function dragEnd() {
 // --- 7. APPLY PREDICTIONS & BACKGROUND ROUTER ---
 function applySwipePrediction(direction) {
   if (!cachedActiveMatch || cachedActiveMatch.stage === "completed") return;
-  
+
+  hideSwipeIntro();
+
   // PUSH Snapshot for Undo
   pushStateSnapshot();
   
@@ -717,7 +793,7 @@ function updateHeaderTitle() {
     const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
     DOM.appHeaderTitle.innerText = `${title} Prediction`;
   } else {
-    DOM.appHeaderTitle.innerText = "World Cup 2026 Prediction";
+    DOM.appHeaderTitle.innerText = APP_TITLE_DEFAULT;
   }
 }
 
@@ -746,6 +822,7 @@ function renderActiveCardDeck() {
     if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.remove("hidden");
     DOM.paneSwipeDeck.classList.add("hidden");
     DOM.paneSwipePodium.classList.add("hidden");
+    setDeckActiveMode(false);
     updateHeaderTitle();
     return;
   } else {
@@ -758,9 +835,10 @@ function renderActiveCardDeck() {
     return;
   }
 
-  // Switch screen view if panel was in podium or welcome
   DOM.paneSwipeDeck.classList.remove("hidden");
   DOM.paneSwipePodium.classList.add("hidden");
+  setDeckActiveMode(true);
+  showSwipeIntroIfNeeded();
 
   DOM.cardDeckContainer.innerHTML = "";
   
@@ -777,7 +855,8 @@ function renderActiveCardDeck() {
     DOM.stepperMatchProgress.innerText = `Match ${cachedActiveMatch.matchId} of 72`;
     DOM.btnChoiceUp.classList.remove("hidden");
     DOM.kbdDrawItem.classList.remove("hidden");
-    
+    updateSwipeIntroForStage();
+
     const match = GROUP_STAGE_MATCHES[cachedActiveMatch.index];
     const teamA = TEAMS_DB[match.teamA];
     const teamB = TEAMS_DB[match.teamB];
@@ -790,9 +869,9 @@ function renderActiveCardDeck() {
     card.className = "swipe-card glass-panel";
     card.innerHTML = `
       <!-- Stamps -->
-      <div class="swipe-stamp stamp-win-a">${teamA.flag} WIN A</div>
-      <div class="swipe-stamp stamp-win-b">WIN B ${teamB.flag}</div>
-      <div class="swipe-stamp stamp-draw">🤝 DRAW</div>
+      <div class="swipe-stamp stamp-win-a">${teamA.flag} ${teamA.name}</div>
+      <div class="swipe-stamp stamp-win-b">${teamB.name} ${teamB.flag}</div>
+      <div class="swipe-stamp stamp-draw">🤝 Level</div>
 
       <div class="card-header-stage">
         <span class="card-stage-meta">GROUP ${match.group} &bull; MATCH ${cachedActiveMatch.matchId}</span>
@@ -836,7 +915,7 @@ function renderActiveCardDeck() {
       DOM.cardDeckContainer.innerHTML = `
         <div class="swipe-card-placeholder glass-panel text-center">
           <i class="fa-solid fa-triangle-exclamation placeholder-spinner" style="color: var(--crimson-500);"></i>
-          <p>Knockout slot resolving error. Try resetting the stage predictions.</p>
+          <p>${ERROR_KICKOFF_MSG}</p>
         </div>
       `;
       return;
@@ -849,7 +928,8 @@ function renderActiveCardDeck() {
     DOM.stepperMatchProgress.innerText = `Match ${cachedActiveMatch.matchId} of 104`;
     DOM.btnChoiceUp.classList.add("hidden");
     DOM.kbdDrawItem.classList.add("hidden");
-    
+    updateSwipeIntroForStage();
+
     DOM.btnFlagA.innerText = teamA.flag;
     DOM.btnFlagB.innerText = teamB.flag;
 
@@ -971,7 +1051,7 @@ function collectPredictedMatchups() {
 function findPodiumMatchupHighlight() {
   const matchups = collectPredictedMatchups();
   if (!matchups.length) {
-    return { label: "Biggest Upset", line: "—" };
+    return { label: "Shock of the Tournament", line: "—" };
   }
 
   let bestUpset = null;
@@ -986,7 +1066,7 @@ function findPodiumMatchupHighlight() {
 
   if (bestUpset) {
     return {
-      label: "Biggest Upset",
+      label: "Shock of the Tournament",
       line: formatUpsetLine(bestUpset.winner, bestUpset.loser) || "—"
     };
   }
@@ -1014,11 +1094,145 @@ function updatePodiumMatchupHighlight() {
   }
 }
 
+function calculateChaosScore() {
+  const results = collectPredictedMatchups().filter((m) => m.type === "result");
+  if (!results.length) return 0;
+  const upsets = results.filter((m) => m.upsetGap > 0).length;
+  return Math.round((upsets / results.length) * 100);
+}
+
+function tierFromPercent(pct, lowLabel, midLabel, highLabel) {
+  if (pct < 34) return lowLabel;
+  if (pct < 67) return midLabel;
+  return highLabel;
+}
+
+function calculateBracketDNA() {
+  const matchups = collectPredictedMatchups();
+  const results = matchups.filter((m) => m.type === "result");
+  const draws = matchups.filter((m) => m.type === "draw").length;
+  const groupPlayed = GROUP_STAGE_MATCHES.filter((m) => {
+    const key = `${m.group}_${m.matchIndex}`;
+    return TournamentStandings.isEnteredGroupResult(state.groupMatchScores[key]);
+  }).length;
+
+  let upsetCount = 0;
+  let favoriteWins = 0;
+  results.forEach((m) => {
+    if (m.upsetGap > 0) upsetCount += 1;
+    const rWin = TEAMS_DB[m.winner].rank;
+    const rLose = TEAMS_DB[m.loser].rank;
+    if (rWin < rLose) favoriteWins += 1;
+  });
+
+  const upsetPct = results.length ? (upsetCount / results.length) * 100 : 0;
+  const favPct = results.length ? (favoriteWins / results.length) * 100 : 50;
+  const drawPct = groupPlayed ? (draws / groupPlayed) * 100 : 0;
+
+  const champId = state.knockoutPicks[104];
+  const champRank = champId && TEAMS_DB[champId] ? TEAMS_DB[champId].rank : 50;
+
+  return {
+    upsetLevel: tierFromPercent(upsetPct, "Low", "Medium", "High"),
+    favoriteBias: tierFromPercent(favPct, "Low", "Medium", "High"),
+    drawTolerance: tierFromPercent(drawPct, "Low", "Medium", "High"),
+    championConfidence: champRank <= 10 ? "Safe" : champRank <= 25 ? "Balanced" : "Brave"
+  };
+}
+
+function getChampionGroupLetter(champId) {
+  for (const g of Object.keys(state.groupStandings)) {
+    if (state.groupStandings[g] && state.groupStandings[g].includes(champId)) {
+      return g;
+    }
+  }
+  return null;
+}
+
+function getKnockoutPathLabel(mId) {
+  if (mId >= 73 && mId <= 88) return "Round of 32";
+  if (mId >= 89 && mId <= 96) return "Round of 16";
+  if (mId >= 97 && mId <= 100) return "Quarter-final";
+  if (mId >= 101 && mId <= 102) return "Semi-final";
+  if (mId === 104) return "Final";
+  return "Knockout";
+}
+
+function buildChampionPath(champId) {
+  if (!champId || !TEAMS_DB[champId]) return [];
+
+  const steps = [];
+  const groupLetter = getChampionGroupLetter(champId);
+  steps.push({
+    label: "Group Stage",
+    detail: groupLetter ? `Group ${groupLetter}` : "Qualified"
+  });
+
+  for (let mId = 73; mId <= 104; mId++) {
+    if (mId === 103) continue;
+    if (state.knockoutPicks[mId] !== champId) continue;
+    const resolved = KNOCKOUT_MATCHES[mId].resolve();
+    if (!resolved.a || !resolved.b) continue;
+    const opponentId = resolved.a === champId ? resolved.b : resolved.a;
+    const opp = TEAMS_DB[opponentId];
+    steps.push({
+      label: getKnockoutPathLabel(mId),
+      detail: opp ? `vs ${opp.name}` : ""
+    });
+  }
+  return steps;
+}
+
+function formatChampionPathText(champId) {
+  const champ = TEAMS_DB[champId];
+  if (!champ) return "—";
+  const steps = buildChampionPath(champId);
+  if (!steps.length) return "—";
+  const parts = steps.map((s) => (s.detail ? `${s.label} ${s.detail}` : s.label));
+  return `${champ.name}'s route:\n${parts.join(" → ")}`;
+}
+
+function renderBracketDnaList(dna) {
+  if (!DOM.bracketDnaList) return;
+  const rows = [
+    ["Upset Level", dna.upsetLevel],
+    ["Favorite Bias", dna.favoriteBias],
+    ["Draw Tolerance", dna.drawTolerance],
+    ["Champion Confidence", dna.championConfidence]
+  ];
+  DOM.bracketDnaList.innerHTML = rows
+    .map(
+      ([label, value]) =>
+        `<li><span class="dna-label">${label}</span><span class="dna-value">${value}</span></li>`
+    )
+    .join("");
+}
+
+function updatePodiumSignaturePanels(champId) {
+  const chaos = calculateChaosScore();
+  if (DOM.podiumChaosValue) {
+    DOM.podiumChaosValue.textContent = `${chaos}%`;
+  }
+  if (DOM.podiumChaosPanel) {
+    DOM.podiumChaosPanel.classList.toggle("hidden", state.isViewer);
+  }
+
+  renderBracketDnaList(calculateBracketDNA());
+
+  if (DOM.pathToGloryRoute) {
+    const pathText = formatChampionPathText(champId);
+    DOM.pathToGloryRoute.textContent = pathText.replace(/\n/g, " ");
+    DOM.pathToGloryRoute.setAttribute("title", pathText);
+  }
+}
+
 // --- 10. CHAMPIONSHIP REVEAL & CTA ---
 function revealPodiumChampionship() {
   if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
   DOM.paneSwipeDeck.classList.add("hidden");
   DOM.paneSwipePodium.classList.remove("hidden");
+  setDeckActiveMode(false);
+  hideSwipeIntro();
   
   // Set championship step for shared compatibility
   state.wizardStep = "championship";
@@ -1052,6 +1266,7 @@ function revealPodiumChampionship() {
   }
 
   updatePodiumMatchupHighlight();
+  updatePodiumSignaturePanels(champId);
 
   if (typeof CelebrationEffects !== "undefined") {
     CelebrationEffects.triggerPodiumCelebration();
@@ -1072,7 +1287,7 @@ function revealPodiumChampionship() {
   } else {
     if (DOM.btnShareResults) DOM.btnShareResults.classList.remove("hidden");
     if (DOM.btnRestartSwipe) {
-      DOM.btnRestartSwipe.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Swipe New Bracket`;
+      DOM.btnRestartSwipe.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Run it back`;
       DOM.btnRestartSwipe.className = "btn btn-secondary btn-sm";
       DOM.btnRestartSwipe.style.padding = "";
       DOM.btnRestartSwipe.style.fontWeight = "";
@@ -1237,11 +1452,11 @@ async function renderLeaderboard() {
     return;
   }
 
-  DOM.leaderboardList.innerHTML = '<p class="sidebar-help-text" style="margin:8px 0 0;">Loading…</p>';
+  DOM.leaderboardList.innerHTML = `<p class="sidebar-help-text" style="margin:8px 0 0;">${pickLoadingLine()}</p>`;
   const result = await SupabaseBracket.listBrackets();
 
   if (!result.ok) {
-    DOM.leaderboardList.innerHTML = `<p class="save-share-error" style="margin:8px 0 0;">${saveShareErrorMessage(result.error)}</p>`;
+    DOM.leaderboardList.innerHTML = `<p class="save-share-error" style="margin:8px 0 0;">${ERROR_KICKOFF_MSG}</p>`;
     return;
   }
 
@@ -1302,17 +1517,22 @@ function closeSwipeSaveShareModal() {
   DOM.saveShareModal?.classList.add("hidden");
 }
 
-async function performShareResults(shareUrlOverride) {
-  const name = state.userName || "My";
-  const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
+function formatUpsetShareLine() {
+  const { line } = findPodiumMatchupHighlight();
+  if (!line || line === "—") return null;
+  return line.replace(/ beat /i, " over ");
+}
 
+async function performShareResults(shareUrlOverride) {
   const champId = state.knockoutPicks[104];
-  const runnerId = champId === KNOCKOUT_MATCHES[104].resolve().a ? KNOCKOUT_MATCHES[104].resolve().b : KNOCKOUT_MATCHES[104].resolve().a;
-  const thirdId = state.knockoutPicks[103];
+  const finalResolved = KNOCKOUT_MATCHES[104].resolve();
+  const runnerId =
+    champId === finalResolved.a ? finalResolved.b : finalResolved.a;
 
   const champ = TEAMS_DB[champId];
   const runner = TEAMS_DB[runnerId];
-  const third = TEAMS_DB[thirdId];
+  const chaos = calculateChaosScore();
+  const upsetLine = formatUpsetShareLine();
 
   let shareUrl = shareUrlOverride || "";
   if (!shareUrl) {
@@ -1326,31 +1546,15 @@ async function performShareResults(shareUrlOverride) {
     }
   }
 
-  let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;
-  if (champ) text += `🥇 CHAMPION: ${champ.flag} ${champ.name.toUpperCase()}\n`;
-  if (runner) text += `🥈 RUNNER-UP: ${runner.flag} ${runner.name}\n`;
-  if (third) text += `🥉 THIRD PLACE: ${third.flag} ${third.name}\n\n`;
-
-  const sfTeams = [101, 102].map((mId) => {
-    const wId = state.knockoutPicks[mId];
-    return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
-  }).filter(Boolean);
-  if (sfTeams.length > 0) {
-    text += `🔥 SEMI-FINALISTS:\n• ${sfTeams.join("\n• ")}\n\n`;
-  }
-
-  const qfTeams = [97, 98, 99, 100].map((mId) => {
-    const wId = state.knockoutPicks[mId];
-    return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
-  }).filter(Boolean);
-  if (qfTeams.length > 0) {
-    text += `⚡ QUARTER-FINALISTS:\n• ${qfTeams.join("\n• ")}\n\n`;
-  }
-
-  text += `Simulated on Swipe Cup ⚽ Predict yours at: ${shareUrl}`;
+  let text = "I just predicted the 2026 World Cup.\n\n";
+  if (champ) text += `🏆 Champion: ${champ.name}\n`;
+  if (runner) text += `🥈 Runner-up: ${runner.name}\n`;
+  if (upsetLine) text += `🤯 Biggest upset: ${upsetLine}\n`;
+  text += `🔥 Chaos score: ${chaos}%\n\n`;
+  text += `Build yours:\n${shareUrl}`;
 
   const shareData = {
-    title: `${title} World Cup Prediction`,
+    title: "My 2026 World Cup prediction",
     text,
     url: shareUrl
   };
@@ -1478,6 +1682,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   bindSharedAndPodiumHandlers();
+  bindSwipeIntroHandlers();
+  if (DOM.deckLoadingMsg) {
+    DOM.deckLoadingMsg.textContent = pickLoadingLine();
+  }
   void renderLeaderboard();
 
   if (await tryLoadSharedOrSavedBracket()) {
@@ -1550,7 +1758,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       saveToLocalStorage();
       updateHeaderTitle();
       renderActiveCardDeck();
-      showToast(`Welcome, ${nameVal}!`);
+      showToast(`Kickoff, ${nameVal}!`);
     });
   }
 

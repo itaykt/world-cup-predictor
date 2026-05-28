@@ -224,13 +224,49 @@ body {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 480px; /* Perfect Phone Mockup Width */
+  max-width: 480px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
   padding: 15px;
   gap: 15px;
+}
+
+body.deck-active {
+  overflow: hidden;
+}
+
+body.deck-active .swipe-app-container {
+  max-width: 100%;
+  padding: 0;
+  gap: 0;
+  height: 100dvh;
+  height: 100vh;
+}
+
+body.deck-active .app-header {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  padding: 8px 14px;
+}
+
+body.deck-active .swipe-main-content {
+  flex: 1;
+  min-height: 0;
+}
+
+body.deck-active .swipe-footer {
+  display: none;
+}
+
+body.deck-active #pane-swipe-deck {
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+  position: relative;
 }
 
 /* Header styling */
@@ -300,6 +336,28 @@ body {
   width: 100%;
 }
 
+body.deck-active #pane-swipe-deck .stepper-progress-container {
+  border-radius: 0;
+  margin: 0;
+}
+
+body.deck-active .card-deck-container {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 8px 10px 4px;
+}
+
+body.deck-active .action-footer-controls {
+  padding: 6px 12px 10px;
+  margin-top: auto;
+}
+
+body.deck-active .global-swipe-indicators {
+  padding: 0 14px 2px;
+}
+
 #pane-swipe-welcome {
   display: flex;
   flex-direction: column;
@@ -367,7 +425,7 @@ body {
   isolation: isolate;
 }
 
-/* The Swipable Match Card */
+/* The Swipable Match Card — collectible trading-card feel */
 .swipe-card {
   position: absolute;
   top: 0;
@@ -376,21 +434,56 @@ body {
   bottom: 0;
   width: 100%;
   height: auto;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 250, 0.98) 100%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--glass-shadow);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 248, 252, 0.96) 45%, rgba(240, 253, 250, 0.94) 100%);
+  border: 2px solid rgba(254, 60, 114, 0.22);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 18px 40px rgba(80, 60, 120, 0.14),
+    0 6px 16px rgba(254, 60, 114, 0.08);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   padding: 16px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transform-origin: bottom center;
+  transform-origin: center center;
+  transform: rotate(-0.8deg);
   cursor: grab;
   user-select: none;
-  touch-action: none; /* Prevents browser scroll interference */
+  touch-action: none;
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
+}
+
+.swipe-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.swipe-card::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-300), var(--gold-400));
+  opacity: 0.35;
+  box-shadow: 0 0 12px var(--gold-glow);
+  pointer-events: none;
 }
 
 .swipe-card:active {
@@ -445,10 +538,16 @@ body {
 }
 
 .card-team-flag {
-  font-size: 3.2rem;
+  font-size: 3.4rem;
   line-height: 1;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
   transition: transform 0.3s var(--transition-spring);
+  position: relative;
+  z-index: 1;
+  padding: 10px 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(255, 255, 255, 0.4) 55%, transparent 70%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
 .swipe-card:hover .card-team-flag {
@@ -683,6 +782,39 @@ body {
   gap: 6px;
   transition: var(--transition-smooth);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-choice-subtle {
+  flex: 0 0 auto;
+  min-width: 44px;
+  max-width: 52px;
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+.btn-choice-subtle:hover {
+  opacity: 1;
+}
+
+.btn-choice-subtle .btn-flag-micro {
+  font-size: 1.15rem;
+}
+
+.btn-choice-icon {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+body.deck-active .swipe-choice-row {
+  flex: 0;
+  justify-content: center;
+  gap: 14px;
 }
 
 .btn-choice span {
@@ -922,6 +1054,182 @@ kbd {
   line-height: 1.35;
 }
 
+/* Swipe intro overlay */
+.swipe-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(250, 248, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.swipe-intro-overlay.hidden {
+  display: none;
+}
+
+.swipe-intro-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 20px 18px;
+  text-align: center;
+}
+
+.swipe-intro-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.swipe-intro-lead {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.swipe-intro-diagram {
+  position: relative;
+  height: 140px;
+  margin-bottom: 12px;
+}
+
+.intro-gesture {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.intro-left { left: 4%; top: 38%; }
+.intro-right { right: 4%; top: 38%; }
+.intro-up { left: 50%; top: 4%; transform: translateX(-50%); }
+
+.intro-gesture.hidden {
+  display: none;
+}
+
+.intro-arrow {
+  font-size: 1.4rem;
+  color: var(--gold-400);
+  line-height: 1;
+}
+
+.intro-card-mock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  width: 120px;
+  height: 72px;
+  border-radius: 12px;
+  border: 2px solid rgba(254, 60, 114, 0.25);
+  background: linear-gradient(135deg, #fff, #f8fafc);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mock-flag { font-size: 1.2rem; }
+
+.swipe-intro-note {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+/* Podium signature panels */
+.podium-signature-panel {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.podium-signature-heading {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.podium-signature-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold-400);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.podium-chaos-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--gold-400);
+  line-height: 1.1;
+}
+
+.podium-chaos-hint {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.bracket-dna-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bracket-dna-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.bracket-dna-list li:last-child {
+  border-bottom: none;
+}
+
+.dna-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dna-value {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.path-to-glory-route {
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 /* CTA to View Bracket in Main App */
 .podium-cta-box {
   margin-bottom: 18px;
@@ -1111,6 +1419,12 @@ kbd {
   .stepper-progress-container {
     padding: 8px 12px;
   }
+  body.deck-active .card-deck-container {
+    min-height: 0;
+    height: auto;
+    flex: 1;
+  }
+
   .card-deck-container {
     min-height: 300px;
     height: 300px;

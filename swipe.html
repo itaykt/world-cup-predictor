@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swipe Cup — World Cup 2026 Swipe Predictor</title>
+  <title>Swipe the Road to the Final — World Cup 2026</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="swipe.css?v=4.7">
+  <link rel="stylesheet" href="swipe.css?v=5.0">
 </head>
 <body>
   <!-- Animated stadium mesh background (decorative) -->
@@ -39,7 +39,7 @@
     <header class="app-header glass-panel">
       <div class="header-brand" style="justify-content: center; width: 100%;">
         <span class="brand-logo" style="margin-right: 8px;"><i class="fa-solid fa-trophy text-gold-glow"></i></span>
-        <h1 id="app-header-title" style="font-size: 1.15rem; letter-spacing: 0.02em;">World Cup 2026 Prediction</h1>
+        <h1 id="app-header-title" style="font-size: 1.05rem; letter-spacing: 0.02em;">Your 2026 World Cup, One Match at a Time</h1>
       </div>
     </header>
 
@@ -49,8 +49,8 @@
         <div class="welcome-glass-card glass-panel text-center">
           <div class="welcome-logo-animated"><i class="fa-solid fa-trophy highlight-gold fa-bounce"></i></div>
           <span class="sub-podium-label">SWIPE CUP 2026</span>
-          <h2>World Cup Prediction</h2>
-          <p class="welcome-intro">Predict the world's biggest tournament match-by-match with fast, Tinder-style swiping!</p>
+          <h2>Swipe the Road to the Final</h2>
+          <p class="welcome-intro">No spreadsheets. No brackets. Just swipe through every match and see who survives your World Cup.</p>
           
           <div class="name-input-container">
             <label for="input-user-name" class="input-label">Your Name</label>
@@ -59,7 +59,7 @@
 
           <div class="podium-cta-box" style="margin-top: 15px; width: 100%;">
             <button id="btn-start-prediction" class="btn btn-gold btn-lg btn-block pulse-gold">
-              <i class="fa-solid fa-play"></i> Start Simulation
+              <i class="fa-solid fa-play"></i> Start My World Cup
             </button>
           </div>
 
@@ -69,7 +69,7 @@
               <button type="button" id="btn-refresh-leaderboard" class="btn btn-secondary btn-sm" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
             </div>
             <div id="leaderboard-list" class="leaderboard-list">
-              <p class="sidebar-help-text" style="margin: 8px 0 0;">Loading…</p>
+              <p class="sidebar-help-text" style="margin: 8px 0 0;">Drawing the groups…</p>
             </div>
             <p id="leaderboard-unconfigured" class="sidebar-help-text hidden" style="margin: 8px 0 0;">
               Add Supabase keys in <code>supabase-utils.js</code> to enable saves.
@@ -80,6 +80,35 @@
 
       <!-- PANE 1: CARD DECK SIMULATION VIEW -->
       <section id="pane-swipe-deck" class="swipe-pane">
+        <!-- One-time swipe how-to -->
+        <div id="swipe-intro-overlay" class="swipe-intro-overlay hidden" role="dialog" aria-labelledby="swipe-intro-title">
+          <div class="swipe-intro-card glass-panel">
+            <h3 id="swipe-intro-title">How to pick a result</h3>
+            <p class="swipe-intro-lead">Swipe the match card — no buttons required.</p>
+            <div class="swipe-intro-diagram" aria-hidden="true">
+              <div class="intro-gesture intro-left">
+                <span class="intro-arrow">←</span>
+                <span class="intro-label">Team A wins</span>
+              </div>
+              <div class="intro-gesture intro-up" id="swipe-intro-draw">
+                <span class="intro-arrow">↑</span>
+                <span class="intro-label">Ends level</span>
+              </div>
+              <div class="intro-gesture intro-right">
+                <span class="intro-arrow">→</span>
+                <span class="intro-label">Team B wins</span>
+              </div>
+              <div class="intro-card-mock">
+                <span class="mock-flag">⚽</span>
+                <span class="mock-vs">vs</span>
+                <span class="mock-flag">⚽</span>
+              </div>
+            </div>
+            <p class="swipe-intro-note" id="swipe-intro-knockout-note">Knockout rounds: left or right only — no draws.</p>
+            <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-block">Kick off</button>
+          </div>
+        </div>
+
         <!-- Visual Stepper Progress -->
         <div class="stepper-progress-container glass-panel">
           <div class="stepper-meta" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -99,15 +128,15 @@
           <!-- Active Card will be dynamically injected here via swipe.js -->
           <div class="swipe-card-placeholder glass-panel">
             <i class="fa-solid fa-spinner fa-spin placeholder-spinner"></i>
-            <p>Loading Match Deck...</p>
+            <p id="deck-loading-msg">Warming up the teams…</p>
           </div>
         </div>
 
         <!-- Prediction Stamps (Visual Indicators outside card deck for extra safety) -->
         <div class="global-swipe-indicators">
-          <span class="global-stamp stamp-left-indicator"><i class="fa-solid fa-arrow-left-long"></i> WIN A</span>
-          <span class="global-stamp stamp-up-indicator"><i class="fa-solid fa-arrow-up-long"></i> DRAW</span>
-          <span class="global-stamp stamp-right-indicator">WIN B <i class="fa-solid fa-arrow-right-long"></i></span>
+          <span class="global-stamp stamp-left-indicator"><i class="fa-solid fa-arrow-left-long"></i> Team A</span>
+          <span class="global-stamp stamp-up-indicator"><i class="fa-solid fa-arrow-up-long"></i> Level</span>
+          <span class="global-stamp stamp-right-indicator">Team B <i class="fa-solid fa-arrow-right-long"></i></span>
         </div>
 
         <!-- Tactile Action Footer Buttons -->
@@ -117,17 +146,15 @@
           </button>
           
           <div class="swipe-choice-row">
-            <button id="btn-choice-left" class="btn-choice btn-win-a" title="Team A Wins (Left Arrow)">
+            <button id="btn-choice-left" class="btn-choice btn-win-a btn-choice-subtle" title="Team A wins (left arrow)" aria-label="Team A wins">
               <span class="btn-flag-micro" id="btn-flag-a">🇲🇽</span>
-              <span>WIN A</span>
             </button>
             
-            <button id="btn-choice-up" class="btn-choice btn-draw" title="Draw Match (Up Arrow)">
-              <span>DRAW</span>
+            <button id="btn-choice-up" class="btn-choice btn-draw btn-choice-subtle" title="Draw (up arrow)" aria-label="Draw">
+              <span class="btn-choice-icon">=</span>
             </button>
             
-            <button id="btn-choice-right" class="btn-choice btn-win-b" title="Team B Wins (Right Arrow)">
-              <span>WIN B</span>
+            <button id="btn-choice-right" class="btn-choice btn-win-b btn-choice-subtle" title="Team B wins (right arrow)" aria-label="Team B wins">
               <span class="btn-flag-micro" id="btn-flag-b">🇰🇷</span>
             </button>
           </div>
@@ -139,9 +166,9 @@
 
         <!-- Keyboard Help Banner -->
         <div class="keyboard-help-banner">
-          <span class="help-item"><kbd><i class="fa-solid fa-arrow-left"></i></kbd> Win A</span>
-          <span class="help-item" id="kbd-draw-item"><kbd><i class="fa-solid fa-arrow-up"></i></kbd> Draw</span>
-          <span class="help-item"><kbd><i class="fa-solid fa-arrow-right"></i></kbd> Win B</span>
+          <span class="help-item"><kbd><i class="fa-solid fa-arrow-left"></i></kbd> Team A</span>
+          <span class="help-item" id="kbd-draw-item"><kbd><i class="fa-solid fa-arrow-up"></i></kbd> Level</span>
+          <span class="help-item"><kbd><i class="fa-solid fa-arrow-right"></i></kbd> Team B</span>
           <span class="help-item"><kbd>Bksp</kbd> Undo</span>
         </div>
       </section>
@@ -150,7 +177,7 @@
       <section id="pane-swipe-podium" class="swipe-pane hidden">
         <div class="podium-glass-card glass-panel text-center">
           <div class="gold-crown-animated"><i class="fa-solid fa-crown fa-bounce highlight-gold"></i></div>
-          <span class="sub-podium-label">SWIPE SIMULATION COMPLETED</span>
+          <span class="sub-podium-label">FULL TIME</span>
           <h2>2026 WORLD CHAMPION</h2>
           
           <!-- Grand Champion -->
@@ -182,9 +209,25 @@
 
           <div class="quick-stats-panel glass-panel">
             <div class="quick-upset-card" id="quick-upset-card">
-              <span class="quick-upset-title" id="quick-upset-title"><i class="fa-solid fa-bolt text-gold-glow"></i> Biggest Upset</span>
+              <span class="quick-upset-title" id="quick-upset-title"><i class="fa-solid fa-bolt text-gold-glow"></i> Shock of the Tournament</span>
               <div id="quick-upset-match" class="quick-upset-match">—</div>
             </div>
+          </div>
+
+          <div class="podium-signature-panel glass-panel hidden" id="podium-chaos-panel">
+            <span class="podium-signature-label"><i class="fa-solid fa-fire-flame-curved"></i> Chaos score</span>
+            <p class="podium-chaos-value" id="podium-chaos-value">—</p>
+            <p class="podium-chaos-hint">% of picks where the underdog won</p>
+          </div>
+
+          <div class="podium-signature-panel glass-panel" id="podium-dna-panel">
+            <h3 class="podium-signature-heading">Your Bracket DNA</h3>
+            <ul class="bracket-dna-list" id="bracket-dna-list"></ul>
+          </div>
+
+          <div class="podium-signature-panel glass-panel" id="podium-path-panel">
+            <h3 class="podium-signature-heading"><i class="fa-solid fa-route"></i> Path to Glory</h3>
+            <p class="path-to-glory-route" id="path-to-glory-route">—</p>
           </div>
 
           <div class="podium-cta-box">
@@ -192,16 +235,16 @@
               <i class="fa-solid fa-share-nodes"></i> Share Results
             </button>
             <button id="btn-view-bracket" class="btn btn-secondary btn-lg btn-block">
-              <i class="fa-solid fa-sitemap"></i> View Bracket
+              <i class="fa-solid fa-sitemap"></i> See the bracket
             </button>
             <button id="btn-save-leaderboard" class="btn btn-secondary btn-sm btn-block hidden" type="button" style="margin-top: 10px;">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Save your prediction
+              <i class="fa-solid fa-cloud-arrow-up"></i> Save my tournament
             </button>
           </div>
 
           <div class="podium-restart-box">
             <button id="btn-restart-swipe" class="btn btn-secondary btn-sm">
-              <i class="fa-solid fa-rotate-left"></i> Swipe New Bracket
+              <i class="fa-solid fa-rotate-left"></i> Run it back
             </button>
           </div>
         </div>
@@ -240,7 +283,7 @@
   <div class="modal-overlay hidden" id="save-share-modal">
     <div class="modal-card glass-panel">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Save your prediction</h3>
+        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Save my tournament</h3>
         <button class="btn-close" id="btn-close-save-share" type="button" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body" id="save-share-form-panel">
@@ -254,7 +297,7 @@
           <input type="password" id="input-save-pin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="••••">
         </div>
         <p id="save-share-error" class="save-share-error hidden" role="alert"></p>
-        <button type="button" id="btn-submit-save-share" class="btn btn-gold btn-block">Save your prediction</button>
+        <button type="button" id="btn-submit-save-share" class="btn btn-gold btn-block">Save my tournament</button>
       </div>
     </div>
   </div>
@@ -267,6 +310,6 @@
   <script src="supabase-utils.js"></script>
   <script src="bracket-view.js"></script>
   <script src="celebration-effects.js"></script>
-  <script src="swipe.js?v=4.8"></script>
+  <script src="swipe.js?v=5.0"></script>
 </body>
 </html>
