@@ -33,8 +33,8 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 - [ ] **manual** Repo **Settings → Pages** → Source: **Deploy from branch** → `main` → `/ (root)`
 - [ ] **manual** Wait for deploy; open your Pages URL
 - [ ] Confirm live:
-  - `https://<user>.github.io/<repo>/swipe.html` — main app
-  - `https://<user>.github.io/<repo>/index.html` — optional full simulator (share links redirect to Swipe)
+  - `https://<user>.github.io/<repo>/swipe.html` — main app (welcome → swipe)
+  - `https://<user>.github.io/<repo>/` — redirects to Swipe
 - [ ] `swipe.html?bracket=<nickname>` — loads podium + **View Bracket** (read-only)
 - [ ] `swipe.html#share=<base64>` — same (hash share; old `index.html#share=` redirects to Swipe)
 
@@ -61,8 +61,7 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 
 | What | URL |
 |------|-----|
-| Play (resumes if you already predicted in this browser) | `swipe.html` |
-| Fresh start (welcome / new bracket) | `swipe.html?new=1` |
+| Play (welcome / enter name) | `swipe.html` or site root |
 | View saved bracket | `swipe.html?bracket=nickname` |
 | Hash share (no DB) | `swipe.html#share=…` |
 | Bracket view only | `swipe.html?bracket=nick&view=bracket` |

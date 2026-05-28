@@ -868,43 +868,8 @@ kbd {
   gap: 12px;
 }
 
-.quick-stats-panel h3 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gold-400);
-}
-
-.quick-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.quick-stat-box {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.stat-num {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.stat-lbl {
-  font-size: 0.55rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
+.quick-stats-panel {
+  padding: 10px 12px;
 }
 
 .quick-upset-card {
@@ -926,9 +891,10 @@ kbd {
 }
 
 .quick-upset-match {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  line-height: 1.35;
 }
 
 /* CTA to View Bracket in Main App */

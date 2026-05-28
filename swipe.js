@@ -131,8 +131,6 @@ const DOM = {
   finishName: document.getElementById("finish-name"),
   finishSilverName: document.getElementById("finish-silver-name"),
   finishBronzeName: document.getElementById("finish-bronze-name"),
-  statTotalGoals: document.getElementById("stat-total-goals"),
-  statAvgGoals: document.getElementById("stat-avg-goals"),
   quickUpsetMatch: document.getElementById("quick-upset-match"),
   
   btnShareResults: document.getElementById("btn-share-results"),
@@ -177,51 +175,6 @@ function initDefaultState() {
 
 function saveToLocalStorage() {
   localStorage.setItem("wc_2026_simulator_save", JSON.stringify(state));
-}
-
-function wantsFreshStartFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const v = params.get("new") ?? params.get("start");
-  return v === "1" || v === "true";
-}
-
-function stripFreshStartParamsFromUrl() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("new");
-  url.searchParams.delete("start");
-  const qs = url.searchParams.toString();
-  const next = url.pathname + (qs ? `?${qs}` : "") + url.hash;
-  window.history.replaceState(null, "", next);
-}
-
-function loadFromLocalStorage() {
-  const save = localStorage.getItem("wc_2026_simulator_save");
-  if (save) {
-    try {
-      const data = JSON.parse(save);
-      state.wizardStep = data.wizardStep || "welcome";
-      state.userName = data.userName || "";
-      state.groupMatchScores = data.groupMatchScores || {};
-      state.knockoutScores = data.knockoutScores || {};
-      state.knockoutPicks = data.knockoutPicks || {};
-      state.thirdPlaceQualifiers = data.thirdPlaceQualifiers || [];
-      state.groupStandings = data.groupStandings || {};
-      state.goalscorers = data.goalscorers || {};
-      state.savedBrackets = data.savedBrackets || [];
-      state.actualResults = data.actualResults || null;
-      
-      // CRITICAL SAFETY SHIELD: Ensure standings arrays exist and have elements to prevent resolution crashes
-      for (const g of Object.keys(GROUPS_DATA)) {
-        if (!state.groupStandings[g] || state.groupStandings[g].length < 4) {
-          state.groupStandings[g] = [...GROUPS_DATA[g]];
-        }
-      }
-      return true;
-    } catch (e) {
-      console.error("Local storage load error:", e);
-    }
-  }
-  return false;
 }
 
 // --- 3. TOAST NOTIFICATION ---
@@ -794,6 +747,67 @@ function getKnockoutRoundTitle(mId) {
   return "KNOCKOUT STAGE";
 }
 
+function formatUpsetLine(winnerId, loserId) {
+  const winner = TEAMS_DB[winnerId];
+  const loser = TEAMS_DB[loserId];
+  if (!winner || !loser) return null;
+  return `${winner.flag} ${winner.name} beat ${loser.name}`;
+}
+
+/** Lower FIFA rank number = stronger; upset when winner's rank is worse (higher number) than loser's. */
+function findBiggestUpsetText() {
+  let biggestDiff = -1;
+  let upsetText = "No clear upsets in this bracket";
+
+  GROUP_STAGE_MATCHES.forEach((m) => {
+    const key = `${m.group}_${m.matchIndex}`;
+    const score = state.groupMatchScores[key];
+    if (!score || score.scoreA === "" || score.scoreB === "") return;
+
+    const sA = parseInt(score.scoreA, 10);
+    const sB = parseInt(score.scoreB, 10);
+    const rA = TEAMS_DB[m.teamA].rank;
+    const rB = TEAMS_DB[m.teamB].rank;
+
+    if (sA > sB && rA > rB) {
+      const diff = rA - rB;
+      const line = formatUpsetLine(m.teamA, m.teamB);
+      if (line && diff > biggestDiff) {
+        biggestDiff = diff;
+        upsetText = line;
+      }
+    } else if (sB > sA && rB > rA) {
+      const diff = rB - rA;
+      const line = formatUpsetLine(m.teamB, m.teamA);
+      if (line && diff > biggestDiff) {
+        biggestDiff = diff;
+        upsetText = line;
+      }
+    }
+  });
+
+  for (let mId = 73; mId <= 104; mId++) {
+    const pick = state.knockoutPicks[mId];
+    const resolved = KNOCKOUT_MATCHES[mId].resolve();
+    if (!pick || !resolved.a || !resolved.b) continue;
+
+    const winner = pick;
+    const loser = pick === resolved.a ? resolved.b : resolved.a;
+    const rWin = TEAMS_DB[winner].rank;
+    const rLose = TEAMS_DB[loser].rank;
+    if (rWin <= rLose) continue;
+
+    const diff = rWin - rLose;
+    const line = formatUpsetLine(winner, loser);
+    if (line && diff > biggestDiff) {
+      biggestDiff = diff;
+      upsetText = line;
+    }
+  }
+
+  return upsetText;
+}
+
 // --- 10. CHAMPIONSHIP REVEAL & CTA ---
 function revealPodiumChampionship() {
   if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
@@ -806,16 +820,6 @@ function revealPodiumChampionship() {
     saveToLocalStorage();
   }
   updateHeaderTitle();
-
-  // Hide stats panel in Viewer Mode to prevent displaying 0 goals
-  const statsPanel = document.querySelector(".quick-stats-panel");
-  if (statsPanel) {
-    if (state.isViewer) {
-      statsPanel.classList.add("hidden");
-    } else {
-      statsPanel.classList.remove("hidden");
-    }
-  }
 
   // Resolve Podium Winners
   const champId = state.knockoutPicks[104];
@@ -833,77 +837,9 @@ function revealPodiumChampionship() {
   if (runner) DOM.finishSilverName.innerText = runner.name;
   if (third) DOM.finishBronzeName.innerText = third.name;
 
-  // Compile quick statistics
-  let totalGoals = 0;
-  // A. Groups goals
-  Object.values(state.groupMatchScores).forEach(score => {
-    if (score && score.scoreA !== "" && score.scoreB !== "") {
-      totalGoals += (parseInt(score.scoreA) + parseInt(score.scoreB));
-    }
-  });
-  // B. Knockouts goals
-  Object.values(state.knockoutScores).forEach(score => {
-    if (score && score.scoreA !== "" && score.scoreB !== "") {
-      totalGoals += (parseInt(score.scoreA) + parseInt(score.scoreB));
-    }
-  });
-
-  DOM.statTotalGoals.innerText = totalGoals;
-  DOM.statAvgGoals.innerText = (totalGoals / 104).toFixed(2);
-
-  // Biggest Upset Finder
-  let biggestDiff = -1;
-  let upsetText = "No clear upsets found";
-
-  // Scan group stage matches
-  GROUP_STAGE_MATCHES.forEach(m => {
-    const key = `${m.group}_${m.matchIndex}`;
-    const score = state.groupMatchScores[key];
-    if (score && score.scoreA !== "" && score.scoreB !== "") {
-      const sA = parseInt(score.scoreA);
-      const sB = parseInt(score.scoreB);
-      const rA = TEAMS_DB[m.teamA].rank;
-      const rB = TEAMS_DB[m.teamB].rank;
-
-      if (sA > sB && rA > rB) { // Lower-ranked (higher rank number) A beat B
-        const diff = rA - rB;
-        if (diff > biggestDiff) {
-          biggestDiff = diff;
-          upsetText = `${TEAMS_DB[m.teamA].flag} ${TEAMS_DB[m.teamA].name} beat ${TEAMS_DB[m.teamB].name} (${sA}-${sB})`;
-        }
-      } else if (sB > sA && rB > rA) { // Lower-ranked B beat A
-        const diff = rB - rA;
-        if (diff > biggestDiff) {
-          biggestDiff = diff;
-          upsetText = `${TEAMS_DB[m.teamB].flag} ${TEAMS_DB[m.teamB].name} beat ${TEAMS_DB[m.teamA].name} (${sA}-${sB})`;
-        }
-      }
-    }
-  });
-
-  // Scan knockout matches
-  for (let mId = 73; mId <= 104; mId++) {
-    const score = state.knockoutScores[mId];
-    const pick = state.knockoutPicks[mId];
-    const resolved = KNOCKOUT_MATCHES[mId].resolve();
-    if (score && pick && resolved.a && resolved.b) {
-      const isWinnerA = (pick === resolved.a);
-      const winner = isWinnerA ? resolved.a : resolved.b;
-      const loser = isWinnerA ? resolved.b : resolved.a;
-      
-      const rWin = TEAMS_DB[winner].rank;
-      const rLose = TEAMS_DB[loser].rank;
-      if (rWin > rLose) { // Upset!
-        const diff = rWin - rLose;
-        if (diff > biggestDiff) {
-          biggestDiff = diff;
-          upsetText = `${TEAMS_DB[winner].flag} ${TEAMS_DB[winner].name} beat ${TEAMS_DB[loser].name} (${score.scoreA}-${score.scoreB})`;
-        }
-      }
-    }
+  if (DOM.quickUpsetMatch) {
+    DOM.quickUpsetMatch.innerText = findBiggestUpsetText();
   }
-
-  DOM.quickUpsetMatch.innerText = upsetText;
 
   // Customizations for Share/Viewer Mode
   if (state.isViewer) {
@@ -1171,7 +1107,7 @@ async function performShareResults(shareUrlOverride) {
       shareUrl = BracketShare.buildBracketViewUrl(payload, window.location.href);
     } catch (err) {
       console.error("Failed to generate share URL:", err);
-      shareUrl = new URL("index.html", window.location.href).href;
+      shareUrl = new URL("swipe.html", window.location.href).href;
     }
   }
 
@@ -1251,10 +1187,7 @@ function bindSharedAndPodiumHandlers() {
   if (DOM.btnRestartSwipe) {
     DOM.btnRestartSwipe.addEventListener("click", () => {
       if (state.isViewer) {
-        const url = new URL("swipe.html", window.location.href);
-        url.searchParams.set("new", "1");
-        url.hash = "";
-        window.location.href = url.href;
+        window.location.href = new URL("swipe.html", window.location.href).pathname;
         return;
       }
       initDefaultState();
@@ -1330,22 +1263,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  if (wantsFreshStartFromUrl()) {
-    initDefaultState();
-    saveToLocalStorage();
-    stripFreshStartParamsFromUrl();
-  } else {
-    const loaded = loadFromLocalStorage();
-    if (!loaded) {
-      initDefaultState();
-      saveToLocalStorage();
-    } else {
-      if (!state.userName) {
-        state.wizardStep = "welcome";
-      }
-      recalculateStandings();
-    }
-  }
+  // Plain swipe.html always opens the welcome screen (no auto-resume from localStorage).
+  initDefaultState();
+  saveToLocalStorage();
 
   // Refresh active match cache before rendering first card
   refreshActiveMatchCache();
