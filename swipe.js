@@ -898,7 +898,7 @@ function renderActiveCardDeck() {
       </div>
 
       <div class="card-team-stars">
-        <span>History & Stars Spotlight</span>
+        <span>Match insights</span>
         ${teamA.name} (${teamA.stars[0]}) vs ${teamB.name} (${teamB.stars[0]}). ${teamA.history.split(".")[0]}.
       </div>
     `;
