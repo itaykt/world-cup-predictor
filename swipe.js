@@ -804,8 +804,8 @@ function renderActiveCardDeck() {
     if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
   }
   
-  // B. Check if completed simulation!
-  if (cachedActiveMatch.stage === "completed") {
+  // B. Check if completed simulation or in share viewer mode!
+  if (state.isViewer || cachedActiveMatch.stage === "completed") {
     revealPodiumChampionship();
     return;
   }
@@ -965,8 +965,20 @@ function revealPodiumChampionship() {
   
   // Set championship step for shared compatibility
   state.wizardStep = "championship";
-  saveToLocalStorage();
+  if (!state.isViewer) {
+    saveToLocalStorage();
+  }
   updateHeaderTitle();
+
+  // Hide stats panel in Viewer Mode to prevent displaying 0 goals
+  const statsPanel = document.querySelector(".quick-stats-panel");
+  if (statsPanel) {
+    if (state.isViewer) {
+      statsPanel.classList.add("hidden");
+    } else {
+      statsPanel.classList.remove("hidden");
+    }
+  }
 
   // Resolve Podium Winners
   const champId = state.knockoutPicks[104];
