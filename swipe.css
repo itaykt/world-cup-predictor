@@ -4,35 +4,35 @@
 */
 
 :root {
-  /* HSL Color Palette aligned with main app */
-  --bg-slate-950: hsl(222, 47%, 4%);
-  --bg-slate-900: hsl(222, 47%, 7%);
-  --bg-slate-800: hsl(222, 47%, 11%);
-  --bg-slate-700: hsl(222, 35%, 16%);
+  /* Tinder Sexy HSL Color Palette - Eggplant Dark + Hot Pink/Orange Gradients */
+  --bg-slate-950: hsl(262, 47%, 4%);
+  --bg-slate-900: hsl(262, 40%, 6%);
+  --bg-slate-800: hsl(262, 30%, 11%);
+  --bg-slate-700: hsl(262, 22%, 17%);
   
-  --emerald-500: hsl(150, 84%, 40%);
-  --emerald-600: hsl(150, 84%, 32%);
-  --emerald-glow: hsla(150, 84%, 40%, 0.18);
+  --emerald-500: hsl(142, 76%, 45%);
+  --emerald-600: hsl(142, 76%, 35%);
+  --emerald-glow: hsla(142, 76%, 45%, 0.18);
   
-  --gold-300: hsl(45, 100%, 75%);
-  --gold-400: hsl(45, 100%, 60%);
-  --gold-500: hsl(40, 95%, 50%);
-  --gold-600: hsl(35, 90%, 42%);
-  --gold-glow: hsla(40, 95%, 50%, 0.22);
+  --gold-300: hsl(18, 100%, 64%);     /* Tinder Coral Orange */
+  --gold-400: hsl(354, 100%, 60%);    /* Tinder Hot Pink */
+  --gold-500: hsl(15, 100%, 56%);     /* Tinder Orange Gradient Core */
+  --gold-600: hsl(350, 95%, 48%);     /* Deep Rose Red */
+  --gold-glow: hsla(354, 100%, 60%, 0.35);
   
   --crimson-500: hsl(354, 85%, 55%);
   --crimson-600: hsl(354, 85%, 45%);
   
-  --text-primary: hsl(0, 0%, 96%);
-  --text-secondary: hsl(210, 20%, 75%);
-  --text-muted: hsl(210, 10%, 50%);
+  --text-primary: hsl(0, 0%, 98%);
+  --text-secondary: hsl(250, 20%, 75%);
+  --text-muted: hsl(250, 10%, 55%);
   
   /* Glassmorphism */
-  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-bg: rgba(20, 10, 40, 0.45);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-gold: rgba(245, 158, 11, 0.2);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(16px);
+  --glass-border-gold: rgba(254, 60, 114, 0.25);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+  --glass-blur: blur(20px);
   
   --radius-sm: 8px;
   --radius-md: 16px;
@@ -347,22 +347,22 @@ body {
 
 .stamp-win-a {
   top: 30px;
-  right: 30px;
-  border-color: var(--emerald-500);
-  color: var(--emerald-500);
-  transform: rotate(15deg);
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+  left: 30px;
+  border-color: var(--gold-400);
+  color: var(--gold-400);
+  transform: rotate(-15deg);
+  text-shadow: 0 0 10px var(--gold-glow);
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .stamp-win-b {
   top: 30px;
-  left: 30px;
-  border-color: var(--emerald-500);
-  color: var(--emerald-500);
-  transform: rotate(-15deg);
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+  right: 30px;
+  border-color: var(--gold-400);
+  color: var(--gold-400);
+  transform: rotate(15deg);
+  text-shadow: 0 0 10px var(--gold-glow);
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .stamp-draw {

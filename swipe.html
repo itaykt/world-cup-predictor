@@ -23,12 +23,9 @@
   <div class="swipe-app-container">
     <!-- Header -->
     <header class="app-header glass-panel">
-      <div class="header-brand">
-        <span class="brand-logo"><i class="fa-solid fa-fire-burner text-gold-glow"></i></span>
-        <h1>SWIPE CUP <span class="badge-gold">2026</span></h1>
-      </div>
-      <div class="header-actions">
-        <a href="index.html" class="btn btn-secondary btn-sm" title="Go to Main App"><i class="fa-solid fa-house"></i> <span>Main App</span></a>
+      <div class="header-brand" style="justify-content: center; width: 100%;">
+        <span class="brand-logo" style="margin-right: 8px;"><i class="fa-solid fa-trophy text-gold-glow"></i></span>
+        <h1 style="font-size: 1.15rem; letter-spacing: 0.02em;">World Cup 2026 Prediction</h1>
       </div>
     </header>
 
@@ -37,11 +34,14 @@
       <section id="pane-swipe-deck" class="swipe-pane">
         <!-- Visual Stepper Progress -->
         <div class="stepper-progress-container glass-panel">
-          <div class="stepper-meta">
-            <span class="stepper-stage-label" id="stepper-stage-title">GROUP STAGE</span>
-            <span class="stepper-count-label" id="stepper-match-progress">Match 1 of 72</span>
+          <div class="stepper-meta" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span class="stepper-stage-label" id="stepper-stage-title" style="flex: 1; text-align: left;">GROUP STAGE</span>
+            <button id="btn-simulate-stage" class="btn btn-secondary btn-sm" style="font-size: 0.62rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; color: var(--gold-300); border-color: rgba(254, 60, 114, 0.25); display: flex; align-items: center; gap: 4px; margin: 0 10px;" title="Fast-forward and simulate the rest of this stage based on FIFA Ranks ELO probabilities">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Sim Stage
+            </button>
+            <span class="stepper-count-label" id="stepper-match-progress" style="flex: 1; text-align: right;">Match 1 of 72</span>
           </div>
-          <div class="progress-bar-bg">
+          <div class="progress-bar-bg" style="margin-top: 6px;">
             <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
           </div>
         </div>
@@ -168,7 +168,7 @@
 
     <!-- Footer -->
     <footer class="swipe-footer glass-panel">
-      <p>&copy; 2026 Swipe Cup. Powered by Advanced Sequential Simulator Router.</p>
+      <p>&copy; 2026 Itaykt</p>
     </footer>
   </div>
   <!-- JavaScript Predictor Logic -->

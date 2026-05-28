@@ -201,6 +201,7 @@ const DOM = {
   progressBarFill: document.getElementById("progress-bar-fill"),
   cardDeckContainer: document.getElementById("card-deck-container"),
   
+  btnSimulateStage: document.getElementById("btn-simulate-stage"),
   btnUndo: document.getElementById("btn-undo"),
   btnChoiceLeft: document.getElementById("btn-choice-left"),
   btnChoiceUp: document.getElementById("btn-choice-up"),
@@ -543,31 +544,37 @@ function applySwipePrediction(direction) {
   if (cachedActiveMatch.stage === "groups") {
     const match = GROUP_STAGE_MATCHES[cachedActiveMatch.index];
     const key = `${match.group}_${match.matchIndex}`;
+    const teamA = TEAMS_DB[match.teamA];
+    const teamB = TEAMS_DB[match.teamB];
     
     if (direction === "win-a") {
-      // Team A win (2-1)
       state.groupMatchScores[key] = { scoreA: "2", scoreB: "1" };
+      showToast(`${teamA.flag} ${teamA.name} Wins!`);
       animateSwipeExit(card, "win-a", () => proceedNextMatch());
     } else if (direction === "win-b") {
-      // Team B win (1-2)
       state.groupMatchScores[key] = { scoreA: "1", scoreB: "2" };
+      showToast(`${teamB.flag} ${teamB.name} Wins!`);
       animateSwipeExit(card, "win-b", () => proceedNextMatch());
     } else if (direction === "draw") {
-      // Draw (1-1)
       state.groupMatchScores[key] = { scoreA: "1", scoreB: "1" };
+      showToast("🤝 Match Drawn!");
       animateSwipeExit(card, "draw", () => proceedNextMatch());
     }
   } else if (cachedActiveMatch.stage === "knockouts") {
     const mId = cachedActiveMatch.matchId;
     const matchInfo = KNOCKOUT_MATCHES[mId].resolve();
+    const teamA = TEAMS_DB[matchInfo.a];
+    const teamB = TEAMS_DB[matchInfo.b];
     
     if (direction === "win-a") {
       state.knockoutScores[mId] = { scoreA: "2", scoreB: "1", pWinner: matchInfo.a };
       state.knockoutPicks[mId] = matchInfo.a;
+      showToast(`${teamA.flag} ${teamA.name} Wins!`);
       animateSwipeExit(card, "win-a", () => proceedNextMatch());
     } else if (direction === "win-b") {
       state.knockoutScores[mId] = { scoreA: "1", scoreB: "2", pWinner: matchInfo.b };
       state.knockoutPicks[mId] = matchInfo.b;
+      showToast(`${teamB.flag} ${teamB.name} Wins!`);
       animateSwipeExit(card, "win-b", () => proceedNextMatch());
     } else if (direction === "draw") {
       // Knockout draws cannot happen! Bounce back and alert.
@@ -618,6 +625,132 @@ function proceedNextMatch() {
   // C. Update Cache and Render next card
   refreshActiveMatchCache();
   renderActiveCardDeck();
+}
+
+// --- 7.5. ELO PROBABILISTIC AUTOMATED STAGE SIMULATOR ---
+function simulateStageProbabilistic() {
+  if (!cachedActiveMatch || cachedActiveMatch.stage === "completed") {
+    showToast("Simulation already completed!", true);
+    return;
+  }
+
+  // PUSH Snapshot for Undo - one snapshot for the entire simulated round!
+  pushStateSnapshot();
+
+  let simulatedCount = 0;
+  let stageLabel = "";
+
+  if (cachedActiveMatch.stage === "groups") {
+    stageLabel = "Group Stage";
+    // Simulate from current active group match index to Match 72 (index 71)
+    for (let i = cachedActiveMatch.index; i < 72; i++) {
+      const match = GROUP_STAGE_MATCHES[i];
+      const key = `${match.group}_${match.matchIndex}`;
+      
+      const teamA = TEAMS_DB[match.teamA];
+      const teamB = TEAMS_DB[match.teamB];
+      if (!teamA || !teamB) continue;
+
+      const d = teamB.rank - teamA.rank; // Difference in FIFA Ranks (smaller rank number is better)
+      
+      // ELO/Ranking Probabilistic Win/Draw/Loss formula
+      let pA = 0.45 + (d / 120);
+      pA = Math.max(0.15, Math.min(0.75, pA)); // Clamped
+      const pDraw = 0.22;
+      
+      const r = Math.random();
+      let scoreA, scoreB;
+      if (r < pA) {
+        // A wins: Score 2-1 (60%), 1-0 (25%), or 2-0 (15%)
+        const randScore = Math.random();
+        if (randScore < 0.60) { scoreA = 2; scoreB = 1; }
+        else if (randScore < 0.85) { scoreA = 1; scoreB = 0; }
+        else { scoreA = 2; scoreB = 0; }
+      } else if (r < pA + pDraw) {
+        // Draw: Score 1-1 (60%), 0-0 (25%), or 2-2 (15%)
+        const randScore = Math.random();
+        if (randScore < 0.60) { scoreA = 1; scoreB = 1; }
+        else if (randScore < 0.85) { scoreA = 0; scoreB = 0; }
+        else { scoreA = 2; scoreB = 2; }
+      } else {
+        // B wins: Score 1-2 (60%), 0-1 (25%), or 0-2 (15%)
+        const randScore = Math.random();
+        if (randScore < 0.60) { scoreA = 1; scoreB = 2; }
+        else if (randScore < 0.85) { scoreA = 0; scoreB = 1; }
+        else { scoreA = 0; scoreB = 2; }
+      }
+
+      state.groupMatchScores[key] = { scoreA: String(scoreA), scoreB: String(scoreB) };
+      simulatedCount++;
+    }
+  } else if (cachedActiveMatch.stage === "knockouts") {
+    const activeId = cachedActiveMatch.matchId;
+    let rangeStart = activeId;
+    let rangeEnd = 104;
+
+    if (activeId >= 73 && activeId <= 88) { rangeEnd = 88; stageLabel = "Round of 32"; }
+    else if (activeId >= 89 && activeId <= 96) { rangeEnd = 96; stageLabel = "Round of 16"; }
+    else if (activeId >= 97 && activeId <= 100) { rangeEnd = 100; stageLabel = "Quarter-finals"; }
+    else if (activeId >= 101 && activeId <= 102) { rangeEnd = 102; stageLabel = "Semi-finals"; }
+    else if (activeId >= 103 && activeId <= 104) { rangeEnd = 104; stageLabel = "Finals"; }
+
+    // Run standings/wildcards math first to ensure clean knockout resolution in consecutive steps
+    recalculateStandings();
+
+    for (let mId = rangeStart; mId <= rangeEnd; mId++) {
+      const match = KNOCKOUT_MATCHES[mId];
+      const resolved = match.resolve();
+      
+      let teamAId = resolved.a;
+      let teamBId = resolved.b;
+
+      // Safe fallbacks to prevent crash if somehow undefined
+      if (!teamAId || !teamBId) {
+        const allKeys = Object.keys(TEAMS_DB);
+        if (!teamAId) teamAId = allKeys[Math.floor(Math.random() * allKeys.length)];
+        if (!teamBId) {
+          do {
+            teamBId = allKeys[Math.floor(Math.random() * allKeys.length)];
+          } while (teamBId === teamAId);
+        }
+      }
+
+      const teamA = TEAMS_DB[teamAId];
+      const teamB = TEAMS_DB[teamBId];
+
+      const d = teamB.rank - teamA.rank;
+      let pA = 0.45 + (d / 120);
+      pA = Math.max(0.15, Math.min(0.75, pA)); // Clamped
+      
+      const r = Math.random();
+      let scoreA, scoreB, pick;
+      if (r < pA) {
+        // A wins: Score 2-1 (70%) or 1-0 (30%)
+        const randScore = Math.random();
+        scoreA = randScore < 0.70 ? 2 : 1;
+        scoreB = scoreA === 2 ? 1 : 0;
+        pick = teamAId;
+      } else {
+        // B wins: Score 1-2 (70%) or 0-1 (30%)
+        const randScore = Math.random();
+        scoreB = randScore < 0.70 ? 2 : 1;
+        scoreA = scoreB === 2 ? 1 : 0;
+        pick = teamBId;
+      }
+
+      state.knockoutScores[mId] = { scoreA: String(scoreA), scoreB: String(scoreB), pWinner: pick };
+      state.knockoutPicks[mId] = pick;
+      simulatedCount++;
+    }
+  }
+
+  // Recalculate standings, update local storage, refresh cache & render
+  recalculateStandings();
+  saveToLocalStorage();
+  refreshActiveMatchCache();
+  renderActiveCardDeck();
+
+  showToast(`⚡ ${stageLabel} simulated based on ELO!`);
 }
 
 // --- 8. UNDO ENGINE (POP SNAPSHOTS) ---
@@ -917,6 +1050,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   DOM.btnUndo.addEventListener("click", triggerUndo);
+  
+  if (DOM.btnSimulateStage) {
+    DOM.btnSimulateStage.addEventListener("click", simulateStageProbabilistic);
+  }
   
   DOM.btnReset.addEventListener("click", () => {
     if (confirm("Are you sure you want to reset your swipe predictor? All predictions will be wiped.")) {
