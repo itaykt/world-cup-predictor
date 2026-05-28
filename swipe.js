@@ -842,9 +842,9 @@ function renderActiveCardDeck() {
     card.className = "swipe-card glass-panel";
     card.innerHTML = `
       <!-- Stamps -->
-      <div class="swipe-stamp stamp-win-a">WINNER</div>
-      <div class="swipe-stamp stamp-win-b">WINNER</div>
-      <div class="swipe-stamp stamp-draw">DRAW</div>
+      <div class="swipe-stamp stamp-win-a">${teamA.flag} WIN A</div>
+      <div class="swipe-stamp stamp-win-b">WIN B ${teamB.flag}</div>
+      <div class="swipe-stamp stamp-draw">🤝 DRAW</div>
 
       <div class="card-header-stage">
         <span class="card-stage-meta">GROUP ${match.group} &bull; MATCH ${cachedActiveMatch.matchId}</span>
@@ -909,8 +909,8 @@ function renderActiveCardDeck() {
     card.className = "swipe-card glass-panel";
     card.innerHTML = `
       <!-- Stamps -->
-      <div class="swipe-stamp stamp-win-a">ADVANCES</div>
-      <div class="swipe-stamp stamp-win-b">ADVANCES</div>
+      <div class="swipe-stamp stamp-win-a">${teamA.flag} ADVANCES</div>
+      <div class="swipe-stamp stamp-win-b">ADVANCES ${teamB.flag}</div>
 
       <div class="card-header-stage">
         <span class="card-stage-meta">${getKnockoutRoundTitle(mId)} &bull; MATCH ${mId}</span>
@@ -1061,8 +1061,9 @@ function revealPodiumChampionship() {
 window.addEventListener("DOMContentLoaded", () => {
   // Load state or start new simulation
   const loaded = loadFromLocalStorage();
-  if (!loaded) {
+  if (!loaded || !state.userName) {
     initDefaultState();
+    saveToLocalStorage();
   } else {
     // If user loaded a completed simulator, check active index, or recalculate standings
     recalculateStandings();
