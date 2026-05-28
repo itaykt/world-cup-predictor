@@ -159,6 +159,7 @@ const DOM = {
   bracketViewKnockout: document.getElementById("bracket-view-knockout"),
   btnBracketToggleGroups: document.getElementById("btn-bracket-toggle-groups"),
   leaderboardChampionBars: document.getElementById("leaderboard-champion-bars"),
+  leaderboardChampionBarsBody: document.getElementById("leaderboard-champion-bars-body"),
   leaderboardList: document.getElementById("leaderboard-list"),
   leaderboardUnconfigured: document.getElementById("leaderboard-unconfigured"),
   btnRefreshLeaderboard: document.getElementById("btn-refresh-leaderboard"),
@@ -847,6 +848,7 @@ function renderActiveCardDeck() {
     DOM.paneSwipePodium.classList.add("hidden");
     setDeckActiveMode(false);
     updateHeaderTitle();
+    void renderLeaderboard();
     return;
   } else {
     if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
@@ -1413,16 +1415,42 @@ function getChampionBarColor(championLabel) {
   return null;
 }
 
-function clearChampionBars() {
-  if (!DOM.leaderboardChampionBars) return;
-  DOM.leaderboardChampionBars.classList.add("hidden");
-  DOM.leaderboardChampionBars.innerHTML = "";
+const CHAMPION_BAR_TOP_N = 6;
+
+function aggregateChampionCounts(brackets) {
+  if (typeof SupabaseBracket !== "undefined" && SupabaseBracket.aggregateChampionCounts) {
+    return SupabaseBracket.aggregateChampionCounts(brackets, CHAMPION_BAR_TOP_N);
+  }
+  const list = brackets || [];
+  const total = list.length;
+  const counts = new Map();
+  for (const row of list) {
+    const key = (row.champion || "").trim() || "—";
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([champion, count]) => ({
+      champion,
+      count,
+      percent: total > 0 ? Math.round((count / total) * 100) : 0
+    }))
+    .sort((a, b) => b.count - a.count || a.champion.localeCompare(b.champion))
+    .slice(0, CHAMPION_BAR_TOP_N);
+}
+
+function setChampionBarsMessage(message) {
+  if (!DOM.leaderboardChampionBarsBody) return;
+  DOM.leaderboardChampionBarsBody.innerHTML = "";
+  const p = document.createElement("p");
+  p.className = "sidebar-help-text champion-bars-msg";
+  p.textContent = message;
+  DOM.leaderboardChampionBarsBody.appendChild(p);
 }
 
 function renderChampionBars(aggregates) {
-  if (!DOM.leaderboardChampionBars) return;
+  if (!DOM.leaderboardChampionBarsBody) return;
   if (!aggregates || !aggregates.length) {
-    clearChampionBars();
+    setChampionBarsMessage("No champion picks yet — finish a run and save to appear here.");
     return;
   }
 
@@ -1445,7 +1473,8 @@ function renderChampionBars(aggregates) {
     trackCell.setAttribute("role", "cell");
     const fill = document.createElement("div");
     fill.className = "champion-bar-fill";
-    fill.style.width = `${percent}%`;
+    const barWidth = percent > 0 ? Math.max(percent, 6) : 0;
+    fill.style.width = `${barWidth}%`;
     const barColor = getChampionBarColor(champion);
     if (barColor) {
       fill.style.background = barColor;
@@ -1463,9 +1492,8 @@ function renderChampionBars(aggregates) {
     wrap.appendChild(row);
   });
 
-  DOM.leaderboardChampionBars.innerHTML = "";
-  DOM.leaderboardChampionBars.appendChild(wrap);
-  DOM.leaderboardChampionBars.classList.remove("hidden");
+  DOM.leaderboardChampionBarsBody.innerHTML = "";
+  DOM.leaderboardChampionBarsBody.appendChild(wrap);
 }
 
 async function renderLeaderboard() {
@@ -1477,30 +1505,28 @@ async function renderLeaderboard() {
   }
   if (!configured) {
     DOM.leaderboardList.innerHTML = "";
-    clearChampionBars();
+    setChampionBarsMessage("Online saves are not configured — add Supabase keys to show community picks.");
     return;
   }
 
-  clearChampionBars();
+  setChampionBarsMessage("Loading champion picks…");
   DOM.leaderboardList.innerHTML = `<p class="sidebar-help-text" style="margin:8px 0 0;">${pickLoadingLine()}</p>`;
   const result = await SupabaseBracket.listBrackets();
 
   if (!result.ok) {
     DOM.leaderboardList.innerHTML = `<p class="save-share-error" style="margin:8px 0 0;">${ERROR_KICKOFF_MSG}</p>`;
-    clearChampionBars();
+    setChampionBarsMessage("Could not load champion picks. Try refresh.");
     return;
   }
 
   if (!result.brackets.length) {
     DOM.leaderboardList.innerHTML =
       '<p class="sidebar-help-text" style="margin:8px 0 0;">No predictions yet — be the first after you finish!</p>';
-    clearChampionBars();
+    setChampionBarsMessage("No champion picks yet — be the first after you finish!");
     return;
   }
 
-  if (typeof SupabaseBracket.aggregateChampionCounts === "function") {
-    renderChampionBars(SupabaseBracket.aggregateChampionCounts(result.brackets));
-  }
+  renderChampionBars(aggregateChampionCounts(result.brackets));
 
   DOM.leaderboardList.innerHTML = "";
   result.brackets.forEach((row) => {

@@ -48,9 +48,9 @@
       <section id="pane-swipe-welcome" class="swipe-pane hidden">
         <div class="welcome-glass-card glass-panel text-center">
           <div class="welcome-logo-animated">
-            <img src="assets/world-cup-2026-logo.png" alt="FIFA World Cup 2026" class="welcome-logo-img" width="160" height="200">
+            <img src="assets/world-cup-2026-logo.png" alt="WORLD CUP 2026" class="welcome-logo-img" width="160" height="200">
           </div>
-          <span class="sub-podium-label">World cup 2026</span>
+          <span class="sub-podium-label">WORLD CUP 2026</span>
           <h2>Swipe the Road to the Final</h2>
           <p class="welcome-intro">No spreadsheets. No brackets. Just swipe through every match and see who survives your World Cup.</p>
           
@@ -70,7 +70,12 @@
               <h4 style="margin: 0; font-size: 0.85rem;"><i class="fa-solid fa-ranking-star highlight-gold"></i> Predictions</h4>
               <button type="button" id="btn-refresh-leaderboard" class="btn btn-secondary btn-sm" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
             </div>
-            <div id="leaderboard-champion-bars" class="leaderboard-champion-bars hidden" aria-label="Champion picks summary"></div>
+            <div id="leaderboard-champion-bars" class="leaderboard-champion-bars" aria-label="Champion picks summary">
+              <p class="champion-bars-title">Champion picks</p>
+              <div id="leaderboard-champion-bars-body" class="champion-bars-body">
+                <p class="sidebar-help-text champion-bars-msg">Loading community picks…</p>
+              </div>
+            </div>
             <div id="leaderboard-list" class="leaderboard-list">
               <p class="sidebar-help-text" style="margin: 8px 0 0;">Drawing the groups…</p>
             </div>
@@ -307,7 +312,7 @@
   <script src="data.js"></script>
   <script src="tournament-standings.js"></script>
   <script src="share-utils.js"></script>
-  <script src="supabase-utils.js"></script>
+  <script src="supabase-utils.js?v=5.3"></script>
   <script src="bracket-view.js"></script>
   <script src="celebration-effects.js"></script>
   <script src="swipe.js?v=5.3"></script>

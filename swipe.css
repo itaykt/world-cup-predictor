@@ -1970,6 +1970,23 @@ body.viewer-mode #pane-bracket-view:not(.hidden) {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+.champion-bars-title {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.champion-bars-body {
+  min-height: 24px;
+}
+
+.champion-bars-msg {
+  margin: 0;
+}
+
 .champion-bars-table {
   display: flex;
   flex-direction: column;
