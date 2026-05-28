@@ -240,9 +240,12 @@ body.deck-active {
 body.deck-active .swipe-app-container {
   max-width: 100%;
   padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
   gap: 0;
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
+  height: 100svh;
+  overflow: hidden;
 }
 
 body.deck-active .app-header {
@@ -267,6 +270,9 @@ body.deck-active #pane-swipe-deck {
   min-height: 0;
   gap: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Header styling */
@@ -342,20 +348,27 @@ body.deck-active #pane-swipe-deck .stepper-progress-container {
 }
 
 body.deck-active .card-deck-container {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: 100%;
   height: auto;
   margin: 0;
-  padding: 8px 10px 4px;
+  padding: 6px 10px 4px;
 }
 
 body.deck-active .action-footer-controls {
-  padding: 6px 12px 10px;
-  margin-top: auto;
+  flex-shrink: 0;
+  padding: 6px 12px calc(8px + env(safe-area-inset-bottom, 0));
+  margin-top: 0;
 }
 
 body.deck-active .global-swipe-indicators {
   padding: 0 14px 2px;
+}
+
+body.deck-active .swipe-card {
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 #pane-swipe-welcome {
@@ -1400,12 +1413,8 @@ kbd {
   }
 }
 
-/* Media Query Responsiveness */
+/* Mobile browser (not fixed app chrome) */
 @media (max-width: 480px) {
-  body {
-    overflow: hidden; /* Lock viewport scroll for native app feel */
-  }
-
   .swipe-bg-orb {
     filter: blur(44px);
   }
@@ -1414,73 +1423,188 @@ kbd {
     background-size: 36px 36px;
     opacity: 0.28;
   }
+
   .swipe-app-container {
     padding: 8px;
-    gap: 10px !important;
-    height: 100vh;
-    height: 100dvh;
+    padding-left: max(8px, env(safe-area-inset-left, 0));
+    padding-right: max(8px, env(safe-area-inset-right, 0));
+    gap: 10px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: 100svh;
     justify-content: flex-start;
-    overflow-y: auto;
   }
+
+  body.deck-active {
+    overflow: hidden;
+  }
+
+  body.deck-active .swipe-app-container {
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    overflow: hidden;
+  }
+
   .swipe-main-content {
     flex: 1 1 auto;
-    min-height: min(420px, 52vh);
+    min-height: 0;
+    width: 100%;
   }
-  #pane-swipe-deck {
-    gap: 12px;
+
+  body.deck-active .swipe-main-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
+
   .app-header {
+    padding: 6px 10px;
+    padding-top: max(6px, env(safe-area-inset-top, 0));
+    flex-shrink: 0;
+  }
+
+  body.deck-active .app-header h1 {
+    font-size: 0.92rem !important;
+  }
+
+  body.deck-active .stepper-progress-container {
     padding: 6px 10px;
     flex-shrink: 0;
   }
-  .stepper-progress-container {
-    padding: 8px 12px;
+
+  body.deck-active .stepper-stage-label,
+  body.deck-active .stepper-count-label {
+    font-size: 0.58rem;
   }
+
+  body.deck-active #btn-simulate-stage {
+    font-size: 0.55rem !important;
+    padding: 2px 6px !important;
+    margin: 0 6px !important;
+  }
+
   body.deck-active .card-deck-container {
-    min-height: 0;
-    height: auto;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    max-height: none;
+    height: auto !important;
+    padding: 4px 8px 2px;
   }
 
   .card-deck-container {
-    min-height: 300px;
-    height: 300px;
+    min-height: 260px;
+    height: auto;
   }
+
+  body.deck-active .swipe-card {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 10px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .swipe-card {
     padding: 12px 10px;
   }
+
+  .card-header-stage {
+    padding-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .card-stage-title {
+    font-size: 0.78rem;
+  }
+
   .card-vs-body {
-    margin: 6px 0 !important;
+    margin: 4px 0 !important;
+    gap: 4px;
+    flex-shrink: 0;
   }
+
   .card-team-flag {
-    font-size: 2.3rem !important;
+    font-size: 2.15rem !important;
+    padding: 6px !important;
   }
+
   .card-team-name {
-    font-size: 0.9rem !important;
+    font-size: 0.82rem !important;
   }
-  .card-team-stars {
-    padding: 6px 8px;
+
+  .card-team-rank {
     font-size: 0.58rem;
   }
+
+  .vs-line {
+    height: 28px;
+  }
+
+  .card-team-stars {
+    padding: 6px 8px;
+    font-size: 0.55rem;
+    line-height: 1.35;
+    flex-shrink: 0;
+  }
+
   .global-swipe-indicators {
-    display: none !important; /* Remove overlapping tags to free space */
+    display: none !important;
   }
+
+  body.deck-active .action-footer-controls {
+    gap: 6px;
+    padding: 4px 10px calc(6px + env(safe-area-inset-bottom, 0));
+  }
+
   .btn-action-circle {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
   }
-  .btn-choice {
-    font-size: 0.65rem;
-    padding: 8px 2px;
+
+  body.deck-active .swipe-choice-row {
+    gap: 10px;
   }
+
+  .btn-choice-subtle {
+    min-width: 40px;
+    max-width: 44px;
+    padding: 7px;
+  }
+
   .keyboard-help-banner {
-    display: none !important; /* Hide keyboard helpers on touch viewports */
+    display: none !important;
   }
+
   .swipe-footer {
     padding: 4px;
     font-size: 0.55rem;
     flex-shrink: 0;
-    margin-top: auto;
+  }
+
+  #pane-swipe-welcome .welcome-glass-card {
+    padding: 20px 14px;
+  }
+
+  #pane-swipe-welcome .leaderboard-list {
+    max-height: 28vh;
+  }
+}
+
+/* Very short mobile viewports (browser chrome + small phones) */
+@media (max-width: 480px) and (max-height: 700px) {
+  body.deck-active .card-team-flag {
+    font-size: 1.85rem !important;
+    padding: 4px !important;
+  }
+
+  body.deck-active .card-vs-body {
+    margin: 2px 0 !important;
+  }
+
+  body.deck-active .card-team-stars {
+    font-size: 0.52rem;
+    padding: 5px 6px;
   }
 }
 
