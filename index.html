@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIFA World Cup 2026 Game-by-Game Simulator</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Simulate the FIFA World Cup 2026 game-by-game. Predict matchdays, watch group tables update in real-time, decide knockout shootouts, and download your champion poster.">
+  <meta name="author" content="Antigravity Tournament Engine">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Shared Viewer Mode Banner -->
+  <div id="viewer-banner" class="viewer-banner hidden">
+    <div class="banner-content">
+      <span><i class="fa-solid fa-eye animate-pulse"></i> Viewing a shared World Cup 2026 Bracket.</span>
+      <button id="btn-copy-shared" class="btn btn-secondary btn-sm"><i class="fa-solid fa-copy"></i> Copy to Edit</button>
+      <button id="btn-create-own" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Create New</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-badge"><i class="fa-solid fa-trophy"></i></div>
+        <div class="brand-text">
+          <h1>WORLD CUP 2026</h1>
+          <p>Game-by-Game Simulation Engine</p>
+        </div>
+      </div>
+      
+      <!-- Timeline Wizard Stepper -->
+      <div class="wizard-stepper" id="wizard-stepper">
+        <div class="step-node active" data-step="welcome" title="Introduction">Welcome</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="md1" title="Matchday 1 (24 games)">MD 1</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="md2" title="Matchday 2 (24 games)">MD 2</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="md3" title="Matchday 3 (24 games)">MD 3</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="r32" title="Round of 32">R32</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="r16" title="Round of 16">R16</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="qf" title="Quarter-Finals">QF</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="sf" title="Semi-Finals">SF</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="final" title="Championship Final">Final</div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-show-full-bracket" class="btn btn-secondary" title="View Full Tournament Tree"><i class="fa-solid fa-diagram-project"></i> <span>Full Bracket</span></button>
+        <button id="btn-show-settings" class="btn btn-secondary" title="AI Commentary Settings"><i class="fa-solid fa-gear"></i></button>
+        <button id="btn-reset" class="btn btn-danger" title="Reset Simulation"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Workspace -->
+    <main class="app-main">
+      
+      <!-- SUB-PANE 1: WELCOME SCREEN -->
+      <section id="pane-welcome" class="wizard-pane active">
+        <div class="welcome-grid">
+          <div class="welcome-hero">
+            <span class="badge-gold">2026 TOURNAMENT SIMULATOR</span>
+            <h2>Predict the entire World Cup, Game-by-Game</h2>
+            <p>Welcome to the ultimate fan simulation experience. Predict the scores of all 72 Group Stage matches. Watch group standings and third-place wildcards recalculate in real-time as you enter goals. Advance your teams through the knockout stage, resolve penalty shootouts, and download your custom championship poster!</p>
+            
+            <div class="hero-start-box">
+              <button id="btn-start-simulation" class="btn btn-gold btn-lg"><i class="fa-solid fa-circle-play"></i> Begin Simulation Path</button>
+              <button id="btn-load-json-trigger" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-up"></i> Load Saved File</button>
+            </div>
+            
+            <!-- Quick Import Card -->
+            <div class="import-widget glass-panel">
+              <h4><i class="fa-solid fa-link"></i> Load Shared Bracket Code</h4>
+              <div class="import-row">
+                <input type="text" id="input-import-code" placeholder="Paste your bracket sharing code or link..." aria-label="Sharing code">
+                <button id="btn-import-code" class="btn btn-primary">Load</button>
+              </div>
+            </div>
+
+            <!-- Accuracy Tracker Widget -->
+            <div class="accuracy-tracker-widget glass-panel" style="margin-top: 15px;">
+              <h4><i class="fa-solid fa-circle-check highlight-gold"></i> Prediction Accuracy Tracker</h4>
+              <p class="sidebar-help-text">Load actual tournament results (or test with our demo results) to calculate your score! (3pts for correct outcome, 5pts for exact scoreline).</p>
+              <div class="accuracy-actions-row" style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btn-load-actual-demo" class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.72rem; padding: 6px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Load Demo Actuals</button>
+                <button id="btn-upload-actual-trigger" class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.72rem; padding: 6px;"><i class="fa-solid fa-file-arrow-up"></i> Upload Actuals</button>
+                <input type="file" id="file-actual-results" accept=".json" style="display: none;">
+              </div>
+              
+              <!-- Accuracy Results Summary Box (Hidden by default) -->
+              <div class="accuracy-summary-box hidden" id="accuracy-summary-box" style="margin-top: 12px; padding: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: 700; font-size: 0.75rem; color: var(--emerald-500); letter-spacing: 0.03em;">ACCURACY EVALUATED:</span>
+                  <button id="btn-clear-actuals" class="btn-close" style="font-size: 0.8rem; padding: 0 4px;" title="Clear results"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center;">
+                  <div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--gold-400);" id="acc-score">0</div>
+                    <div style="font-size: 0.55rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Total Points</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: white;" id="acc-exact">0/104</div>
+                    <div style="font-size: 0.55rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Exact Scores</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: white;" id="acc-winners">0/104</div>
+                    <div style="font-size: 0.55rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Correct Winners</div>
+                  </div>
+                </div>
+                <button id="btn-view-accuracy-breakdown" class="btn btn-sm btn-gold btn-block" style="margin-top: 10px; width: 100%; font-size: 0.72rem; padding: 4px;"><i class="fa-solid fa-eye"></i> View Evaluation Breakdown</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="welcome-stats-panel glass-panel">
+            <h3>Simulation Progress</h3>
+            
+            <div class="progress-block">
+              <div class="progress-header">
+                <span>Group Stage Matches</span>
+                <span id="txt-prog-group">0 / 72 Games predicted</span>
+              </div>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prog-group" style="width: 0%;"></div></div>
+            </div>
+
+            <div class="progress-block">
+              <div class="progress-header">
+                <span>Knockout Bracket Rounds</span>
+                <span id="txt-prog-knockout">0 / 32 Nodes Completed</span>
+              </div>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-prog-knockout" style="width: 0%;"></div></div>
+            </div>
+
+            <div class="welcome-spotlight glass-panel" id="champ-spotlight">
+              <div class="spotlight-empty">
+                <i class="fa-solid fa-trophy gold-glow"></i>
+                <p>Simulate matches to crown your Champion!</p>
+              </div>
+              <div class="spotlight-filled hidden" id="champ-spotlight-filled">
+                <span class="spotlight-badge">YOUR CHAMPION PREDICTION</span>
+                <div class="spotlight-team">
+                  <span class="spotlight-flag" id="champ-flag">🇧🇷</span>
+                  <h4 id="champ-name">BRAZIL</h4>
+                </div>
+                <button id="btn-spotlight-share" class="btn btn-gold btn-block"><i class="fa-solid fa-share-nodes"></i> Share predictions</button>
+              </div>
+            </div>
+
+            <!-- Bracket Version Manager -->
+            <div class="bracket-manager-widget glass-panel" style="margin-top: 15px;">
+              <h4><i class="fa-solid fa-folder-open highlight-gold"></i> Saved Bracket Slots</h4>
+              <div class="bracket-slot-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                <!-- Slot 1 -->
+                <div class="bracket-slot-row" data-slot="1" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+                  <span class="slot-title" style="font-size: 0.78rem; font-weight: 500;">Slot 1: <span class="slot-status" id="slot-status-1" style="color: var(--text-muted); font-weight: 700;">Empty</span></span>
+                  <div class="slot-actions" style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-gold btn-save-slot" data-slot="1" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                    <button class="btn btn-sm btn-secondary btn-load-slot hidden" id="btn-load-1" data-slot="1" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-folder-open"></i> Load</button>
+                  </div>
+                </div>
+                <!-- Slot 2 -->
+                <div class="bracket-slot-row" data-slot="2" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+                  <span class="slot-title" style="font-size: 0.78rem; font-weight: 500;">Slot 2: <span class="slot-status" id="slot-status-2" style="color: var(--text-muted); font-weight: 700;">Empty</span></span>
+                  <div class="slot-actions" style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-gold btn-save-slot" data-slot="2" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                    <button class="btn btn-sm btn-secondary btn-load-slot hidden" id="btn-load-2" data-slot="2" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-folder-open"></i> Load</button>
+                  </div>
+                </div>
+                <!-- Slot 3 -->
+                <div class="bracket-slot-row" data-slot="3" style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+                  <span class="slot-title" style="font-size: 0.78rem; font-weight: 500;">Slot 3: <span class="slot-status" id="slot-status-3" style="color: var(--text-muted); font-weight: 700;">Empty</span></span>
+                  <div class="slot-actions" style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-gold btn-save-slot" data-slot="3" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                    <button class="btn btn-sm btn-secondary btn-load-slot hidden" id="btn-load-3" data-slot="3" style="font-size: 0.65rem; padding: 2px 6px;"><i class="fa-solid fa-folder-open"></i> Load</button>
+                  </div>
+                </div>
+              </div>
+              <button id="btn-compare-brackets" class="btn btn-secondary btn-block disabled" style="margin-top: 10px; font-size: 0.8rem; width: 100%;" title="Compare saved brackets side-by-side"><i class="fa-solid fa-code-compare"></i> Compare predictions</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUB-PANE 2: UNIFIED MATCHDAY WIZARD VIEW -->
+      <section id="pane-wizard" class="wizard-pane">
+        <div class="wizard-workspace-layout">
+          
+          <!-- LEFT COLUMN: FOCUSED ACTIVE ROUND MATCH FEED -->
+          <div class="wizard-match-feed-column">
+            <div class="feed-header-card glass-panel">
+              <div class="feed-title-block">
+                <span class="round-indicator-label" id="lbl-active-round-tag">GROUP STAGE</span>
+                <h2 id="lbl-active-round-title">Matchday 1 (24 Games)</h2>
+              </div>
+              
+              <div class="feed-controls">
+                <button id="btn-clear-stage" class="btn btn-danger" title="Clear predictions for this stage"><i class="fa-solid fa-eraser"></i> Clear Stage</button>
+                <button id="btn-quick-fill-stage" class="btn btn-secondary" title="Simulate remaining games for this stage"><i class="fa-solid fa-wand-magic-sparkles"></i> Simulate Stage</button>
+                <button id="btn-next-stage" class="btn btn-primary btn-gold disabled">Next Stage <i class="fa-solid fa-circle-arrow-right"></i></button>
+              </div>
+            </div>
+
+            <!-- Scrollable list of match scorecards -->
+            <div class="match-scorecard-list" id="match-scorecard-list">
+              <!-- Dynamically populated with active stage matches -->
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: REAL-TIME STICKY STANDINGS SIDEBAR -->
+          <aside class="wizard-standings-column" id="wizard-standings-column">
+            
+            <div class="sticky-sidebar-container">
+              <!-- Sidebar Tabs: Groups vs Third-Place Wildcards -->
+              <div class="sidebar-tab-controls">
+                <button class="sidebar-tab active" data-stab="groups" id="stab-btn-groups">
+                  <i class="fa-solid fa-table-list"></i> Groups
+                </button>
+                <button class="sidebar-tab" data-stab="wildcards" id="stab-btn-wildcards">
+                  <i class="fa-solid fa-list-ol"></i> 3rd Place
+                </button>
+                <button class="sidebar-tab" data-stab="difficulty" id="stab-btn-difficulty">
+                  <i class="fa-solid fa-chart-simple"></i> Path Rank
+                </button>
+              </div>
+
+              <!-- Content Tab A: Groups Standings Sidebar Grid -->
+              <div class="sidebar-tab-content active" id="stab-content-groups">
+                <div class="sidebar-groups-grid" id="sidebar-groups-grid">
+                  <!-- Dynamically populated with 12 mini tables -->
+                </div>
+              </div>
+
+              <!-- Content Tab B: Third-Place Live wildcards -->
+              <div class="sidebar-tab-content" id="stab-content-wildcards">
+                <div class="wildcard-sidebar-card glass-panel">
+                  <h3>Top 8 Third-Place Wildcards</h3>
+                  <p class="sidebar-help-text">Ranks the 12 third-placed teams across all groups. The top 8 automatically qualify for the Round of 32!</p>
+                  
+                  <div class="table-responsive">
+                    <table class="standings-table compact-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 30px;">#</th>
+                          <th>Group</th>
+                          <th>Team</th>
+                          <th class="stat">GD</th>
+                          <th class="stat">Pts</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="sidebar-wildcard-tbody">
+                        <!-- JS Dynamically populated -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content Tab C: Path Difficulty Power Rankings -->
+              <div class="sidebar-tab-content" id="stab-content-difficulty">
+                <div class="wildcard-sidebar-card glass-panel">
+                  <h3>Opponent Path Difficulty</h3>
+                  <p class="sidebar-help-text">Sums the FIFA ranks of all opponents (actual and projected knockouts) along each team's simulated path. Higher sum = tougher path!</p>
+                  <div class="difficulty-chart-list" id="difficulty-chart-list">
+                    <!-- JS Dynamically populated with bar chart rows -->
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- SUB-PANE 3: SIMULATION COMPLETED SCREEN (PODIUM) -->
+      <section id="pane-championship" class="wizard-pane">
+        <div class="championship-grid">
+          
+          <!-- LEFT COLUMN: GRAND CHAMPION PODIUM -->
+          <div class="podium-glass-card glass-panel">
+            <div class="gold-crown-animated"><i class="fa-solid fa-crown fa-bounce highlight-gold"></i></div>
+            <span class="sub-podium-label">TOURNAMENT SIMULATION COMPLETED</span>
+            <h2>2026 WORLD CHAMPION</h2>
+            
+            <div class="champion-podium-block">
+              <span id="finish-flag">🇧🇷</span>
+              <h1 id="finish-name">BRAZIL</h1>
+            </div>
+            
+            <div class="podium-finishers-row">
+              <div class="finisher-podium silver">
+                <div class="podium-number">2</div>
+                <div class="finisher-info">
+                  <span class="medal-label"><i class="fa-solid fa-medal"></i> RUNNER-UP</span>
+                  <h3 id="finish-silver-name">Germany</h3>
+                </div>
+              </div>
+
+              <div class="finisher-podium bronze">
+                <div class="podium-number">3</div>
+                <div class="finisher-info">
+                  <span class="medal-label"><i class="fa-solid fa-medal"></i> THIRD PLACE</span>
+                  <h3 id="finish-bronze-name">Argentina</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="championship-actions">
+              <button id="btn-podium-share-final" class="btn btn-gold btn-lg"><i class="fa-solid fa-share-nodes"></i> Share Bracket Link</button>
+              <button id="btn-podium-download-poster" class="btn btn-secondary btn-lg"><i class="fa-solid fa-image"></i> Download Champion Poster</button>
+              <button id="btn-start-over" class="btn btn-danger btn-lg"><i class="fa-solid fa-rotate-left"></i> Simulate Again</button>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: STATS DASHBOARD -->
+          <div class="stats-glass-card glass-panel">
+            <h3><i class="fa-solid fa-chart-line highlight-gold"></i> Tournament Stats Dashboard</h3>
+            <p class="sidebar-help-text">Overview of your simulated World Cup 2026 journey.</p>
+            
+            <div class="stats-grid-row">
+              <div class="stat-badge-box">
+                <span class="stat-box-num" id="stat-total-goals">0</span>
+                <span class="stat-box-label">Total Goals</span>
+              </div>
+              <div class="stat-badge-box">
+                <span class="stat-box-num" id="stat-avg-goals">0.0</span>
+                <span class="stat-box-label">Goals / Game</span>
+              </div>
+            </div>
+            
+            <!-- Upset Card -->
+            <div class="upset-stat-card glass-panel" id="upset-stat-card">
+              <h4><i class="fa-solid fa-bolt highlight-gold"></i> Biggest Tournament Upset</h4>
+              <div class="upset-match-row" id="upset-match-row">
+                <!-- JS populated -->
+              </div>
+            </div>
+
+            <!-- Golden Boot Table -->
+            <div class="golden-boot-card glass-panel">
+              <h4><i class="fa-solid fa-shoe-prints highlight-gold"></i> Golden Boot Leaderboard</h4>
+              <div class="table-responsive">
+                <table class="standings-table compact-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 30px;">#</th>
+                      <th>Player</th>
+                      <th>Team</th>
+                      <th class="stat">Goals</th>
+                    </tr>
+                  </thead>
+                  <tbody id="golden-boot-tbody">
+                    <!-- JS populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- App Footer / Global controls -->
+    <footer class="app-footer glass-panel">
+      <div class="footer-left">
+        <p>&copy; 2026 World Cup Bracket Predictor. Game-by-Game Sequential Simulation Engine.</p>
+      </div>
+      <div class="footer-right">
+        <button id="btn-footer-share" class="btn btn-gold btn-sm"><i class="fa-solid fa-share-nodes"></i> <span>Share Bracket</span></button>
+        <button id="btn-footer-download" class="btn btn-secondary btn-sm"><i class="fa-solid fa-image"></i> <span>Download Poster</span></button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL A: FULL INTERACTIVE BRACKET VIEW -->
+  <div class="modal-overlay hidden" id="bracket-modal">
+    <div class="modal-card wide-modal glass-panel">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-diagram-project highlight-gold"></i> Complete Tournament Tree</h3>
+        <button class="btn-close" id="btn-close-bracket"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body scrollable-modal-body">
+        
+        <!-- Zoom controls in modal -->
+        <div class="modal-bracket-controls">
+          <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-in"><i class="fa-solid fa-plus"></i></button>
+          <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-out"><i class="fa-solid fa-minus"></i></button>
+          <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-reset"><i class="fa-solid fa-arrows-to-eye"></i> Centered View</button>
+        </div>
+
+        <div class="bracket-viewport" id="bracket-viewport">
+          <div class="bracket-canvas" id="bracket-canvas">
+            
+            <!-- COLUMN 1: LEFT ROUND OF 32 (Matches 73-80) -->
+            <div class="bracket-column round-32 left">
+              <div class="column-title">Round of 32</div>
+              <div class="match-list" id="list-r32-left"></div>
+            </div>
+
+            <!-- COLUMN 2: LEFT ROUND OF 16 (Matches 89-92) -->
+            <div class="bracket-column round-16 left">
+              <div class="column-title">Round of 16</div>
+              <div class="match-list" id="list-r16-left"></div>
+            </div>
+
+            <!-- COLUMN 3: LEFT QUARTER-FINALS (Matches 97-98) -->
+            <div class="bracket-column round-qf left">
+              <div class="column-title">Quarter-Finals</div>
+              <div class="match-list" id="list-qf-left"></div>
+            </div>
+
+            <!-- COLUMN 4: LEFT SEMI-FINAL (Match 101) -->
+            <div class="bracket-column round-sf left">
+              <div class="column-title">Semi-Final</div>
+              <div class="match-list" id="list-sf-left"></div>
+            </div>
+
+            <!-- COLUMN 5: CENTER PODIUM & GRAND FINALS -->
+            <div class="bracket-center-podium">
+              <!-- Third place -->
+              <div class="third-place-box glass-panel">
+                <div class="center-box-title"><i class="fa-solid fa-medal"></i> Third-Place Play-Off</div>
+                <div class="match-card single-node" id="node-m103" data-match-id="103">
+                  <div class="team-slot" data-slot="0">
+                    <span class="slot-flag">?</span>
+                    <span class="slot-name">Loser SF 1</span>
+                  </div>
+                  <div class="team-slot" data-slot="1">
+                    <span class="slot-flag">?</span>
+                    <span class="slot-name">Loser SF 2</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Final -->
+              <div class="grand-final-box glass-panel">
+                <div class="center-box-title"><i class="fa-solid fa-crown highlight-gold"></i> World Cup Final</div>
+                <div class="match-card grand-final-card" id="node-m104" data-match-id="104">
+                  <div class="team-slot" data-slot="0">
+                    <span class="slot-flag">?</span>
+                    <span class="slot-name">Winner SF 1</span>
+                  </div>
+                  <div class="divider-vs">VS</div>
+                  <div class="team-slot" data-slot="1">
+                    <span class="slot-flag">?</span>
+                    <span class="slot-name">Winner SF 2</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Small Champion Badge inside tree -->
+              <div class="champion-tree-podium hidden" id="tree-champion-badge">
+                <div class="gold-crown"><i class="fa-solid fa-crown fa-bounce"></i></div>
+                <span id="tree-champ-flag">🏆</span>
+                <h4 id="tree-champ-name">BRAZIL</h4>
+              </div>
+            </div>
+
+            <!-- COLUMN 6: RIGHT SEMI-FINAL (Match 102) -->
+            <div class="bracket-column round-sf right">
+              <div class="column-title">Semi-Final</div>
+              <div class="match-list" id="list-sf-right"></div>
+            </div>
+
+            <!-- COLUMN 7: RIGHT QUARTER-FINALS (Matches 99-100) -->
+            <div class="bracket-column round-qf right">
+              <div class="column-title">Quarter-Finals</div>
+              <div class="match-list" id="list-qf-right"></div>
+            </div>
+
+            <!-- COLUMN 8: RIGHT ROUND OF 16 (Matches 93-96) -->
+            <div class="bracket-column round-16 right">
+              <div class="column-title">Round of 16</div>
+              <div class="match-list" id="list-r16-right"></div>
+            </div>
+
+            <!-- COLUMN 9: RIGHT ROUND OF 32 (Matches 81-88) -->
+            <div class="bracket-column round-32 right">
+              <div class="column-title">Round of 32</div>
+              <div class="match-list" id="list-r32-right"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL B: SHARE LINK DIALOG OVERLAY -->
+  <div class="modal-overlay hidden" id="share-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-share-nodes highlight-gold"></i> Share Predictions</h3>
+        <button class="btn-close" id="btn-close-share"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Your bracket picks have been successfully encoded! Copy the link below to share with your friends or post on social media.</p>
+        
+        <div class="share-link-input-row">
+          <input type="text" id="txt-share-link" readonly aria-label="Shareable link">
+          <button id="btn-copy-link" class="btn btn-primary"><i class="fa-solid fa-copy"></i> <span>Copy</span></button>
+        </div>
+        
+        <div class="export-options">
+          <h4>Other Formats</h4>
+          <div class="btn-grid-two">
+            <button id="btn-download-json" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-down"></i> Save file (.json)</button>
+            <button id="btn-modal-download-image" class="btn btn-gold"><i class="fa-solid fa-image"></i> Download Poster (PNG)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL C: SETTINGS DIALOG OVERLAY -->
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-gear highlight-gold"></i> AI Simulator Settings</h3>
+        <button class="btn-close" id="btn-close-settings"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Enter your Anthropic API Key below to activate premium AI match previews generated live by Claude 3.5 Sonnet.</p>
+        
+        <div class="form-group">
+          <label for="txt-api-key" style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--gold-400); margin-bottom: 8px;">Anthropic API Key</label>
+          <input type="password" id="txt-api-key" placeholder="sk-ant-..." style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 8px 12px; border-radius: var(--radius-sm); outline: none; margin-bottom: 12px; font-family: monospace;" aria-label="API Key">
+        </div>
+        
+        <div class="btn-grid-two">
+          <button id="btn-save-settings" class="btn btn-gold">Save Key</button>
+          <button id="btn-clear-settings" class="btn btn-secondary">Clear Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL D: MULTI-BRACKET COMPARE OVERLAY -->
+  <div class="modal-overlay hidden" id="compare-modal">
+    <div class="modal-card wide-modal glass-panel" style="height: 80vh; max-width: 900px; width: 900px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-code-compare highlight-gold"></i> Saved Bracket Comparisons</h3>
+        <button class="btn-close" id="btn-close-compare"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body scrollable-modal-body" style="padding: 15px; overflow-y: auto;">
+        <p style="margin-bottom: 12px; font-size: 0.82rem; color: var(--text-muted);">This side-by-side comparison shows the projected outcomes of all tournament matches across your three saved slots. Rows with diverging predictions are highlighted in glowing amber.</p>
+        <div class="table-responsive">
+          <table class="standings-table compact-table compare-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid rgba(255,255,255,0.05);">
+                <th style="text-align: left; padding: 8px;">Match details</th>
+                <th style="text-align: center; padding: 8px;">Slot 1</th>
+                <th style="text-align: center; padding: 8px;">Slot 2</th>
+                <th style="text-align: center; padding: 8px;">Slot 3</th>
+                <th style="text-align: center; padding: 8px;">Diverged?</th>
+              </tr>
+            </thead>
+            <tbody id="compare-tbody">
+              <!-- JS populated comparison rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL E: ACCURACY BREAKDOWN OVERLAY -->
+  <div class="modal-overlay hidden" id="accuracy-modal">
+    <div class="modal-card wide-modal glass-panel" style="height: 80vh; max-width: 900px; width: 900px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-chart-pie highlight-gold"></i> Prediction Accuracy Breakdown</h3>
+        <button class="btn-close" id="btn-close-accuracy"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body scrollable-modal-body" style="padding: 15px; overflow-y: auto;">
+        <p style="margin-bottom: 12px; font-size: 0.82rem; color: var(--text-muted);">A comprehensive comparison of your predictions against the loaded actual results. exact scoreline yields +5 points, correct winner/draw outcome yields +3 points.</p>
+        <div class="table-responsive">
+          <table class="standings-table compact-table accuracy-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid rgba(255,255,255,0.05);">
+                <th style="text-align: left; padding: 8px;">Match details</th>
+                <th style="text-align: center; padding: 8px;">Your Prediction</th>
+                <th style="text-align: center; padding: 8px;">Actual Result</th>
+                <th style="text-align: center; padding: 8px;">Points Scored</th>
+              </tr>
+            </thead>
+            <tbody id="accuracy-tbody">
+              <!-- JS populated comparison rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen Toast Alert -->
+  <div class="toast-notification hidden" id="toast-el">
+    <span id="toast-msg">Link successfully copied to clipboard!</span>
+  </div>
+
+  <!-- Hidden Exporter Poster Drawing Canvas -->
+  <canvas id="poster-canvas" style="display: none;"></canvas>
+
+  <!-- JavaScript file -->
+  <script src="app.js"></script>
+</body>
+</html>

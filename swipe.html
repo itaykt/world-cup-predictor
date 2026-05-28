@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swipe Cup — World Cup 2026 Swipe Predictor</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="swipe.css">
+</head>
+<body>
+  <!-- Toast notifications -->
+  <div id="toast-el" class="toast-notification hidden">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-msg">Success!</span>
+  </div>
+
+  <div class="swipe-app-container">
+    <!-- Header -->
+    <header class="app-header glass-panel">
+      <div class="header-brand">
+        <span class="brand-logo"><i class="fa-solid fa-fire-burner text-gold-glow"></i></span>
+        <h1>SWIPE CUP <span class="badge-gold">2026</span></h1>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary btn-sm" title="Go to Main App"><i class="fa-solid fa-house"></i> <span>Main App</span></a>
+      </div>
+    </header>
+
+    <main class="swipe-main-content">
+      <!-- PANE 1: CARD DECK SIMULATION VIEW -->
+      <section id="pane-swipe-deck" class="swipe-pane">
+        <!-- Visual Stepper Progress -->
+        <div class="stepper-progress-container glass-panel">
+          <div class="stepper-meta">
+            <span class="stepper-stage-label" id="stepper-stage-title">GROUP STAGE</span>
+            <span class="stepper-count-label" id="stepper-match-progress">Match 1 of 72</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- The Gesture Card Deck -->
+        <div class="card-deck-container" id="card-deck-container">
+          <!-- Active Card will be dynamically injected here via swipe.js -->
+          <div class="swipe-card-placeholder glass-panel">
+            <i class="fa-solid fa-spinner fa-spin placeholder-spinner"></i>
+            <p>Loading Match Deck...</p>
+          </div>
+        </div>
+
+        <!-- Prediction Stamps (Visual Indicators outside card deck for extra safety) -->
+        <div class="global-swipe-indicators">
+          <span class="global-stamp stamp-left-indicator"><i class="fa-solid fa-arrow-left-long"></i> WIN A</span>
+          <span class="global-stamp stamp-up-indicator"><i class="fa-solid fa-arrow-up-long"></i> DRAW</span>
+          <span class="global-stamp stamp-right-indicator">WIN B <i class="fa-solid fa-arrow-right-long"></i></span>
+        </div>
+
+        <!-- Tactile Action Footer Buttons -->
+        <div class="action-footer-controls">
+          <button id="btn-undo" class="btn-action-circle btn-undo-circle" title="Undo Prediction (Backspace)">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          
+          <div class="swipe-choice-row">
+            <button id="btn-choice-left" class="btn-choice btn-win-a" title="Team A Wins (Left Arrow)">
+              <span class="btn-flag-micro" id="btn-flag-a">🇲🇽</span>
+              <span>WIN A</span>
+            </button>
+            
+            <button id="btn-choice-up" class="btn-choice btn-draw" title="Draw Match (Up Arrow)">
+              <span>DRAW</span>
+            </button>
+            
+            <button id="btn-choice-right" class="btn-choice btn-win-b" title="Team B Wins (Right Arrow)">
+              <span>WIN B</span>
+              <span class="btn-flag-micro" id="btn-flag-b">🇰🇷</span>
+            </button>
+          </div>
+
+          <button id="btn-reset" class="btn-action-circle btn-reset-circle" title="Reset Predictor">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+
+        <!-- Keyboard Help Banner -->
+        <div class="keyboard-help-banner">
+          <span class="help-item"><kbd><i class="fa-solid fa-arrow-left"></i></kbd> Win A</span>
+          <span class="help-item" id="kbd-draw-item"><kbd><i class="fa-solid fa-arrow-up"></i></kbd> Draw</span>
+          <span class="help-item"><kbd><i class="fa-solid fa-arrow-right"></i></kbd> Win B</span>
+          <span class="help-item"><kbd>Bksp</kbd> Undo</span>
+        </div>
+      </section>
+
+      <!-- PANE 2: SIMPLIFIED CHAMPIONSHIP PODIUM SCREEN -->
+      <section id="pane-swipe-podium" class="swipe-pane hidden">
+        <div class="podium-glass-card glass-panel text-center">
+          <div class="gold-crown-animated"><i class="fa-solid fa-crown fa-bounce highlight-gold"></i></div>
+          <span class="sub-podium-label">SWIPE SIMULATION COMPLETED</span>
+          <h2>2026 WORLD CHAMPION</h2>
+          
+          <!-- Grand Champion -->
+          <div class="champion-podium-block">
+            <span id="finish-flag">🇧🇷</span>
+            <h1 id="finish-name">BRAZIL</h1>
+          </div>
+          
+          <!-- Silver and Bronze Finishers -->
+          <div class="podium-finishers-row">
+            <div class="finisher-podium silver">
+              <div class="podium-number">2</div>
+              <div class="finisher-info">
+                <span class="medal-label"><i class="fa-solid fa-medal"></i> RUNNER-UP</span>
+                <h3 id="finish-silver-name">Germany</h3>
+              </div>
+            </div>
+
+            <div class="finisher-podium bronze">
+              <div class="podium-number">3</div>
+              <div class="finisher-info">
+                <span class="medal-label"><i class="fa-solid fa-medal"></i> THIRD PLACE</span>
+                <h3 id="finish-bronze-name">Argentina</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats Dashboard -->
+          <div class="quick-stats-panel glass-panel">
+            <h3><i class="fa-solid fa-chart-bar highlight-gold"></i> Simulation Stats</h3>
+            <div class="quick-stats-grid">
+              <div class="quick-stat-box">
+                <span id="stat-total-goals" class="stat-num">0</span>
+                <span class="stat-lbl">Goals Scored</span>
+              </div>
+              <div class="quick-stat-box">
+                <span id="stat-avg-goals" class="stat-num">0.0</span>
+                <span class="stat-lbl">Goals / Game</span>
+              </div>
+            </div>
+            <div class="quick-upset-card" id="quick-upset-card">
+              <span class="quick-upset-title"><i class="fa-solid fa-bolt text-gold-glow"></i> Biggest Simulated Upset</span>
+              <div id="quick-upset-match" class="quick-upset-match">--- vs ---</div>
+            </div>
+          </div>
+
+          <!-- CTA to View Bracket in Main App -->
+          <div class="podium-cta-box">
+            <button id="btn-go-to-main-bracket" class="btn btn-gold btn-lg btn-block pulse-gold">
+              <i class="fa-solid fa-diagram-project"></i> View Full Interactive Bracket
+            </button>
+            <p class="cta-subtitle">View detailed goalscorers, interactive match trees, power rankings, and AI previews inside the main app!</p>
+          </div>
+
+          <div class="podium-restart-box">
+            <button id="btn-restart-swipe" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-rotate-left"></i> Swipe New Bracket
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="swipe-footer glass-panel">
+      <p>&copy; 2026 Swipe Cup. Powered by Advanced Sequential Simulator Router.</p>
+    </footer>
+  </div>
+  <!-- JavaScript Predictor Logic -->
+  <script src="swipe.js"></script>
+</body>
+</html>

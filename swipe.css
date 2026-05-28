@@ -1,0 +1,933 @@
+/* 
+  Swipe Cup — World Cup Swipe Predictor Stylesheet
+  Theme: "Golden Pitch Glassmorphism Mobile-First Edition"
+*/
+
+:root {
+  /* HSL Color Palette aligned with main app */
+  --bg-slate-950: hsl(222, 47%, 4%);
+  --bg-slate-900: hsl(222, 47%, 7%);
+  --bg-slate-800: hsl(222, 47%, 11%);
+  --bg-slate-700: hsl(222, 35%, 16%);
+  
+  --emerald-500: hsl(150, 84%, 40%);
+  --emerald-600: hsl(150, 84%, 32%);
+  --emerald-glow: hsla(150, 84%, 40%, 0.18);
+  
+  --gold-300: hsl(45, 100%, 75%);
+  --gold-400: hsl(45, 100%, 60%);
+  --gold-500: hsl(40, 95%, 50%);
+  --gold-600: hsl(35, 90%, 42%);
+  --gold-glow: hsla(40, 95%, 50%, 0.22);
+  
+  --crimson-500: hsl(354, 85%, 55%);
+  --crimson-600: hsl(354, 85%, 45%);
+  
+  --text-primary: hsl(0, 0%, 96%);
+  --text-secondary: hsl(210, 20%, 75%);
+  --text-muted: hsl(210, 10%, 50%);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-gold: rgba(245, 158, 11, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(16px);
+  
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 32px;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* General Resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: radial-gradient(circle at top, var(--bg-slate-800) 0%, var(--bg-slate-950) 100%);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-md);
+}
+
+/* App Container */
+.swipe-app-container {
+  width: 100%;
+  max-width: 480px; /* Perfect Phone Mockup Width */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 15px;
+  gap: 15px;
+}
+
+/* Header styling */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  font-size: 1.25rem;
+  color: var(--gold-400);
+}
+
+.text-gold-glow {
+  text-shadow: 0 0 10px var(--gold-glow);
+  filter: drop-shadow(0 0 4px var(--gold-glow));
+}
+
+.header-brand h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-gold {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--bg-slate-950);
+  background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0;
+  box-shadow: 0 0 6px var(--gold-glow);
+}
+
+/* Visual Progress Stepper */
+.stepper-progress-container {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepper-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stepper-stage-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--gold-400);
+  letter-spacing: 0.08em;
+}
+
+.stepper-count-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--emerald-500), var(--gold-400));
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  transition: width 0.4s cubic-bezier(0.1, 0.8, 0.2, 1);
+}
+
+/* Card Deck Container */
+.card-deck-container {
+  position: relative;
+  height: 345px;
+  width: 100%;
+  perspective: 1000px;
+  z-index: 10;
+}
+
+/* The Swipable Match Card */
+.swipe-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(22, 33, 54, 0.85) 0%, rgba(13, 20, 35, 0.95) 100%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform-origin: bottom center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none; /* Prevents browser scroll interference */
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.swipe-card:active {
+  cursor: grabbing;
+}
+
+.swipe-card.dragging {
+  transition: none; /* Instant tracking during drag */
+}
+
+/* Card Header details */
+.card-header-stage {
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+}
+
+.card-stage-meta {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+}
+
+.card-stage-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  margin-top: 2px;
+}
+
+/* Card Match Body VS Layout */
+.card-vs-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 15px 0;
+  gap: 10px;
+}
+
+.card-team-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  width: 45%;
+}
+
+.card-team-flag {
+  font-size: 3.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s var(--transition-spring);
+}
+
+.swipe-card:hover .card-team-flag {
+  transform: scale(1.08);
+}
+
+.card-team-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1.2;
+}
+
+.card-team-rank {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.card-team-rank span {
+  color: var(--gold-400);
+}
+
+.card-vs-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.vs-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+}
+
+.vs-stamp {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+/* Card Team Stars Footer */
+.card-team-stars {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.card-team-stars span {
+  color: var(--gold-400);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Overlay Stamps inside Card */
+.swipe-stamp {
+  position: absolute;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border: 3px solid;
+  border-radius: 8px;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+  z-index: 5;
+}
+
+.stamp-win-a {
+  top: 30px;
+  right: 30px;
+  border-color: var(--emerald-500);
+  color: var(--emerald-500);
+  transform: rotate(15deg);
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.stamp-win-b {
+  top: 30px;
+  left: 30px;
+  border-color: var(--emerald-500);
+  color: var(--emerald-500);
+  transform: rotate(-15deg);
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.stamp-draw {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  border-color: var(--gold-400);
+  color: var(--gold-400);
+  text-shadow: 0 0 10px var(--gold-glow);
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+
+/* Global stamps wrapper for backups */
+.global-swipe-indicators {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 16px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.global-stamp {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+/* Card Deck Placeholder */
+.swipe-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  color: var(--text-secondary);
+}
+
+.placeholder-spinner {
+  font-size: 2rem;
+  color: var(--gold-400);
+}
+
+/* EXIT ANIMATIONS */
+.swipe-out-left {
+  transform: translate(-150vw, 80px) rotate(-35deg) !important;
+  transition: transform 0.4s ease-in !important;
+}
+
+.swipe-out-right {
+  transform: translate(150vw, 80px) rotate(35deg) !important;
+  transition: transform 0.4s ease-in !important;
+}
+
+.swipe-out-up {
+  transform: translate(0, -150vh) rotate(0deg) !important;
+  transition: transform 0.4s ease-in !important;
+}
+
+/* Tactile Footer controls */
+.action-footer-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+  gap: 8px;
+}
+
+.btn-action-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: var(--transition-smooth);
+}
+
+.btn-action-circle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-undo-circle:hover {
+  transform: rotate(-30deg);
+  color: var(--gold-300);
+}
+
+.btn-reset-circle:hover {
+  color: var(--crimson-500);
+}
+
+.swipe-choice-row {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-choice {
+  flex: 1;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: white;
+  padding: 10px 6px;
+  border-radius: 40px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-choice span {
+  white-space: nowrap;
+}
+
+.btn-flag-micro {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.btn-win-a:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: var(--emerald-500);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-win-b:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: var(--emerald-500);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-draw:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: var(--gold-400);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+/* Keyboard Help Banner */
+.keyboard-help-banner {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.help-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+/* PANE 2: CHAMPIONSHIP SHOWCASE (GRAND PODIUM) */
+.podium-glass-card {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(20, 30, 50, 0.85), rgba(15, 23, 42, 0.95));
+  border: 2px solid var(--gold-400);
+  box-shadow: 0 0 45px var(--gold-glow);
+  padding: 30px 20px;
+  animation: float 4s ease-in-out infinite;
+}
+
+.gold-crown-animated {
+  font-size: 2.8rem;
+  margin-bottom: 8px;
+}
+
+.sub-podium-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--gold-300);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.podium-glass-card h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.champion-podium-block {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+#finish-flag {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+
+#finish-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  background: linear-gradient(to right, #ffffff, var(--gold-300));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.podium-finishers-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.finisher-podium {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.finisher-podium.silver {
+  border-color: rgba(192, 192, 192, 0.2);
+}
+
+.finisher-podium.bronze {
+  border-color: rgba(205, 127, 50, 0.2);
+}
+
+.podium-number {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1;
+}
+
+.silver .podium-number { color: #c0c0c0; }
+.bronze .podium-number { color: #cd7f32; }
+
+.finisher-info {
+  text-align: left;
+}
+
+.medal-label {
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.silver .medal-label { color: #c0c0c0; }
+.bronze .medal-label { color: #cd7f32; }
+
+.finisher-info h3 {
+  font-size: 0.8rem;
+  color: white;
+  margin-top: 1px;
+}
+
+/* Quick Stats dashboard on swiped podium */
+.quick-stats-panel {
+  padding: 15px;
+  margin-bottom: 24px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-stats-panel h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gold-400);
+}
+
+.quick-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.quick-stat-box {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: white;
+}
+
+.stat-lbl {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.quick-upset-card {
+  background: rgba(245, 158, 11, 0.03);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.quick-upset-title {
+  font-size: 0.55rem;
+  color: var(--gold-400);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.quick-upset-match {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* CTA to View Bracket in Main App */
+.podium-cta-box {
+  margin-bottom: 18px;
+}
+
+.pulse-gold {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  animation: pulseGold 2s infinite alternate;
+}
+
+.cta-subtitle {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  line-height: 1.4;
+  padding: 0 10px;
+}
+
+.podium-restart-box {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 15px;
+}
+
+/* BUTTONS SIZING & DECORATIONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+  color: var(--bg-slate-950);
+  border-color: var(--gold-300);
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--gold-glow);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.72rem;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 0.9rem;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* TOAST NOTIFICATION */
+.toast-notification {
+  position: fixed;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
+  padding: 8px 18px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 100000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideDown 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.2) forwards;
+}
+
+/* App Footer */
+.swipe-footer {
+  text-align: center;
+  padding: 10px;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.highlight-gold {
+  color: var(--gold-400);
+}
+
+/* ANIMATIONS & KEYFRAMES */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-25px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes pulseGold {
+  0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+  100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* Media Query Responsiveness */
+@media (max-width: 480px) {
+  body {
+    background: var(--bg-slate-950);
+    overflow: hidden; /* Lock viewport scroll for native app feel */
+  }
+  .swipe-app-container {
+    padding: 8px;
+    gap: 8px !important;
+    height: 100vh;
+    height: 100dvh;
+    justify-content: space-between;
+  }
+  .app-header {
+    padding: 6px 10px;
+  }
+  .stepper-progress-container {
+    padding: 8px 12px;
+  }
+  .card-deck-container {
+    height: 310px !important;
+  }
+  .swipe-card {
+    padding: 12px 10px;
+  }
+  .card-vs-body {
+    margin: 6px 0 !important;
+  }
+  .card-team-flag {
+    font-size: 2.3rem !important;
+  }
+  .card-team-name {
+    font-size: 0.9rem !important;
+  }
+  .card-team-stars {
+    padding: 6px 8px;
+    font-size: 0.58rem;
+  }
+  .global-swipe-indicators {
+    display: none !important; /* Remove overlapping tags to free space */
+  }
+  .btn-action-circle {
+    width: 38px;
+    height: 38px;
+  }
+  .btn-choice {
+    font-size: 0.65rem;
+    padding: 8px 2px;
+  }
+  .keyboard-help-banner {
+    display: none !important; /* Hide keyboard helpers on touch viewports */
+  }
+  .swipe-footer {
+    padding: 4px;
+    font-size: 0.55rem;
+  }
+}
