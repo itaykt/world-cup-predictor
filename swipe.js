@@ -179,6 +179,21 @@ function saveToLocalStorage() {
   localStorage.setItem("wc_2026_simulator_save", JSON.stringify(state));
 }
 
+function wantsFreshStartFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get("new") ?? params.get("start");
+  return v === "1" || v === "true";
+}
+
+function stripFreshStartParamsFromUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("new");
+  url.searchParams.delete("start");
+  const qs = url.searchParams.toString();
+  const next = url.pathname + (qs ? `?${qs}` : "") + url.hash;
+  window.history.replaceState(null, "", next);
+}
+
 function loadFromLocalStorage() {
   const save = localStorage.getItem("wc_2026_simulator_save");
   if (save) {
@@ -1236,7 +1251,10 @@ function bindSharedAndPodiumHandlers() {
   if (DOM.btnRestartSwipe) {
     DOM.btnRestartSwipe.addEventListener("click", () => {
       if (state.isViewer) {
-        window.location.href = window.location.pathname;
+        const url = new URL("swipe.html", window.location.href);
+        url.searchParams.set("new", "1");
+        url.hash = "";
+        window.location.href = url.href;
         return;
       }
       initDefaultState();
@@ -1312,15 +1330,21 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const loaded = loadFromLocalStorage();
-  if (!loaded) {
+  if (wantsFreshStartFromUrl()) {
     initDefaultState();
     saveToLocalStorage();
+    stripFreshStartParamsFromUrl();
   } else {
-    if (!state.userName) {
-      state.wizardStep = "welcome";
+    const loaded = loadFromLocalStorage();
+    if (!loaded) {
+      initDefaultState();
+      saveToLocalStorage();
+    } else {
+      if (!state.userName) {
+        state.wizardStep = "welcome";
+      }
+      recalculateStandings();
     }
-    recalculateStandings();
   }
 
   // Refresh active match cache before rendering first card

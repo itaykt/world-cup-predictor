@@ -11,6 +11,7 @@ Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or
 | File | Description |
 |------|-------------|
 | [`swipe.html`](swipe.html) | **Main app** — swipe predictor, results podium, simple bracket viewer |
+| [`swipe.html?new=1`](swipe.html?new=1) | **Fresh start** — welcome screen (ignores saved progress in this browser) |
 | [`index.html`](index.html) | Optional full simulator (advanced); share links redirect to Swipe |
 
 ## Development
@@ -45,6 +46,7 @@ npm run ci        # lint + test (same as GitHub Actions)
 
 | Method | URL | Storage |
 |--------|-----|---------|
+| Fresh start | `swipe.html?new=1` | Clears in-browser resume for this visit |
 | Hash share | `swipe.html#share=…` | None (full state in URL) |
 | Leaderboard | `swipe.html?bracket=nickname` | Supabase `brackets` table |
 | Bracket only | `swipe.html?bracket=nick&view=bracket` | Opens group + knockout view directly |

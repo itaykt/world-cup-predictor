@@ -61,7 +61,8 @@ See [supabase/SPAM-PROTECTION.md`](supabase/SPAM-PROTECTION.md) for rate-limit i
 
 | What | URL |
 |------|-----|
-| Play | `swipe.html` |
+| Play (resumes if you already predicted in this browser) | `swipe.html` |
+| Fresh start (welcome / new bracket) | `swipe.html?new=1` |
 | View saved bracket | `swipe.html?bracket=nickname` |
 | Hash share (no DB) | `swipe.html#share=…` |
 | Bracket view only | `swipe.html?bracket=nick&view=bracket` |
