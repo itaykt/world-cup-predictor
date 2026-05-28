@@ -142,6 +142,7 @@ const DOM = {
   bracketViewTitle: document.getElementById("bracket-view-title"),
   bracketViewGroups: document.getElementById("bracket-view-groups"),
   bracketViewKnockout: document.getElementById("bracket-view-knockout"),
+  btnBracketToggleGroups: document.getElementById("btn-bracket-toggle-groups"),
   btnRestartSwipe: document.getElementById("btn-restart-swipe"),
 
   saveShareModal: document.getElementById("save-share-modal"),
@@ -936,6 +937,30 @@ function showSwipePane(activePane) {
   if (activePane) activePane.classList.remove("hidden");
 }
 
+function getBracketViewOptions() {
+  return {
+    teamsDb: TEAMS_DB,
+    groupsData: GROUPS_DATA,
+    groupStandings: state.groupStandings,
+    groupMatchScores: state.groupMatchScores,
+    groupMatchesFlat: GROUP_STAGE_MATCHES,
+    legacyKnockoutOnly: isLegacyKnockoutOnly(),
+    knockoutPicks: state.knockoutPicks,
+    knockoutScores: state.knockoutScores,
+    resolveMatch: (mId) => {
+      if (!KNOCKOUT_MATCHES[mId]) return null;
+      try {
+        return KNOCKOUT_MATCHES[mId].resolve();
+      } catch (err) {
+        console.warn("Could not resolve match", mId, err);
+        return null;
+      }
+    },
+    getStandingStats: (gLetter, teamId) =>
+      TournamentStandings.getTeamSummaryStats(gLetter, teamId, state.groupMatchScores)
+  };
+}
+
 function renderSimpleBracketView() {
   recalculateStandings();
   const name = state.userName || "Prediction";
@@ -946,25 +971,42 @@ function renderSimpleBracketView() {
 
   if (typeof BracketView === "undefined") return;
 
-  BracketView.render({
-    groupsEl: DOM.bracketViewGroups,
-    knockoutEl: DOM.bracketViewKnockout,
-    teamsDb: TEAMS_DB,
-    groupsData: GROUPS_DATA,
-    groupStandings: state.groupStandings,
-    groupMatchScores: state.groupMatchScores,
-    groupMatchesFlat: GROUP_STAGE_MATCHES,
-    legacyKnockoutOnly: isLegacyKnockoutOnly(),
-    knockoutPicks: state.knockoutPicks,
-    knockoutScores: state.knockoutScores,
-    resolveMatch: (mId) => (KNOCKOUT_MATCHES[mId] ? KNOCKOUT_MATCHES[mId].resolve() : null),
-    getStandingStats: (gLetter, teamId) =>
-      TournamentStandings.getTeamSummaryStats(gLetter, teamId, state.groupMatchScores)
-  });
+  const options = getBracketViewOptions();
+  BracketView.renderKnockoutTree(DOM.bracketViewKnockout, options);
+  BracketView.renderGroups(DOM.bracketViewGroups, options);
+
+  if (DOM.btnBracketToggleGroups) {
+    const legacy = isLegacyKnockoutOnly();
+    DOM.btnBracketToggleGroups.classList.toggle("hidden", legacy);
+    DOM.btnBracketToggleGroups.disabled = legacy;
+  }
+}
+
+function showKnockoutBracketPanel() {
+  DOM.bracketViewKnockout?.classList.remove("hidden");
+  DOM.bracketViewGroups?.classList.add("hidden");
+  if (DOM.btnBracketToggleGroups) {
+    DOM.btnBracketToggleGroups.innerHTML = '<i class="fa-solid fa-table"></i> Group stage';
+    DOM.btnBracketToggleGroups.dataset.view = "knockout";
+  }
+}
+
+function showGroupStagePanel() {
+  if (isLegacyKnockoutOnly()) {
+    showToast("Group stage not included in this shared bracket.", true);
+    return;
+  }
+  DOM.bracketViewKnockout?.classList.add("hidden");
+  DOM.bracketViewGroups?.classList.remove("hidden");
+  if (DOM.btnBracketToggleGroups) {
+    DOM.btnBracketToggleGroups.innerHTML = '<i class="fa-solid fa-sitemap"></i> Bracket';
+    DOM.btnBracketToggleGroups.dataset.view = "groups";
+  }
 }
 
 function openBracketView() {
   renderSimpleBracketView();
+  showKnockoutBracketPanel();
   showSwipePane(DOM.paneBracketView);
 }
 
@@ -1117,11 +1159,96 @@ async function performShareResults(shareUrlOverride) {
   }
 }
 
+function bindSharedAndPodiumHandlers() {
+  if (DOM.btnViewBracket) {
+    DOM.btnViewBracket.addEventListener("click", openBracketView);
+  }
+
+  if (DOM.btnBackFromBracket) {
+    DOM.btnBackFromBracket.addEventListener("click", () => {
+      if (DOM.btnBracketToggleGroups?.dataset.view === "groups") {
+        showKnockoutBracketPanel();
+        return;
+      }
+      showSwipePane(DOM.paneSwipePodium);
+    });
+  }
+
+  if (DOM.btnBracketToggleGroups) {
+    DOM.btnBracketToggleGroups.addEventListener("click", () => {
+      if (DOM.btnBracketToggleGroups.dataset.view === "groups") {
+        showKnockoutBracketPanel();
+      } else {
+        showGroupStagePanel();
+      }
+    });
+  }
+
+  if (DOM.btnRestartSwipe) {
+    DOM.btnRestartSwipe.addEventListener("click", () => {
+      if (state.isViewer) {
+        window.location.href = window.location.pathname;
+        return;
+      }
+      initDefaultState();
+      saveToLocalStorage();
+      refreshActiveMatchCache();
+      renderActiveCardDeck();
+    });
+  }
+
+  if (DOM.btnShareResults) {
+    DOM.btnShareResults.addEventListener("click", async () => {
+      await performShareResults(null);
+    });
+  }
+
+  if (DOM.btnSaveLeaderboard) {
+    DOM.btnSaveLeaderboard.addEventListener("click", () => {
+      if (openSwipeSaveShareModal()) return;
+      showToast("Leaderboard save is not configured.", true);
+    });
+  }
+
+  if (DOM.btnCloseSaveShare) {
+    DOM.btnCloseSaveShare.addEventListener("click", closeSwipeSaveShareModal);
+  }
+
+  if (DOM.btnSubmitSaveShare) {
+    DOM.btnSubmitSaveShare.addEventListener("click", async () => {
+      const nickname = DOM.inputSaveNickname?.value || "";
+      const pin = DOM.inputSavePin?.value || "";
+      recalculateStandings();
+      const payload = BracketShare.payloadFromSimulatorState(state);
+
+      DOM.btnSubmitSaveShare.disabled = true;
+      const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
+      DOM.btnSubmitSaveShare.disabled = false;
+
+      if (!result.ok) {
+        if (DOM.saveShareError) {
+          DOM.saveShareError.textContent = saveShareErrorMessage(result.error);
+          DOM.saveShareError.classList.remove("hidden");
+        }
+        return;
+      }
+
+      closeSwipeSaveShareModal();
+      const shareUrl =
+        result.url || SupabaseBracket.buildSubmittedBracketUrl(result.nickname, window.location.href);
+      showToast("Bracket saved!");
+      await performShareResults(shareUrl);
+    });
+  }
+}
+
 // --- 11. EVENT REGISTRATION DOMCONTENTLOADED ---
 window.addEventListener("DOMContentLoaded", async () => {
   if (typeof SupabaseBracket !== "undefined") {
     SupabaseBracket.initSupabase();
   }
+
+  bindSharedAndPodiumHandlers();
 
   if (await tryLoadSharedOrSavedBracket()) {
     updateSupabaseSaveButton();
@@ -1169,35 +1296,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  DOM.btnRestartSwipe.addEventListener("click", () => {
-    if (state.isViewer) {
-      // Go to clean page (strip parameters) to predict their own bracket
-      window.location.href = window.location.pathname;
-      return;
-    }
-    initDefaultState();
-    saveToLocalStorage();
-    refreshActiveMatchCache();
-    renderActiveCardDeck();
-  });
-
-  if (DOM.btnViewBracket) {
-    DOM.btnViewBracket.addEventListener("click", openBracketView);
-  }
-
-  if (DOM.btnBackFromBracket) {
-    DOM.btnBackFromBracket.addEventListener("click", () => {
-      showSwipePane(DOM.paneSwipePodium);
-    });
-  }
-
-  if (DOM.btnSaveLeaderboard) {
-    DOM.btnSaveLeaderboard.addEventListener("click", () => {
-      if (openSwipeSaveShareModal()) return;
-      showToast("Leaderboard save is not configured.", true);
-    });
-  }
-
   updateSupabaseSaveButton();
 
   // Welcome screen name registration
@@ -1223,43 +1321,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (e.key === "Enter") {
         if (DOM.btnStartPrediction) DOM.btnStartPrediction.click();
       }
-    });
-  }
-
-  if (DOM.btnCloseSaveShare) {
-    DOM.btnCloseSaveShare.addEventListener("click", closeSwipeSaveShareModal);
-  }
-
-  if (DOM.btnSubmitSaveShare) {
-    DOM.btnSubmitSaveShare.addEventListener("click", async () => {
-      const nickname = DOM.inputSaveNickname?.value || "";
-      const pin = DOM.inputSavePin?.value || "";
-      recalculateStandings();
-      const payload = BracketShare.payloadFromSimulatorState(state);
-
-      DOM.btnSubmitSaveShare.disabled = true;
-      const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
-      DOM.btnSubmitSaveShare.disabled = false;
-
-      if (!result.ok) {
-        if (DOM.saveShareError) {
-          DOM.saveShareError.textContent = saveShareErrorMessage(result.error);
-          DOM.saveShareError.classList.remove("hidden");
-        }
-        return;
-      }
-
-      closeSwipeSaveShareModal();
-      const shareUrl =
-        result.url || SupabaseBracket.buildSubmittedBracketUrl(result.nickname, window.location.href);
-      showToast("Bracket saved!");
-      await performShareResults(shareUrl);
-    });
-  }
-
-  if (DOM.btnShareResults) {
-    DOM.btnShareResults.addEventListener("click", async () => {
-      await performShareResults(null);
     });
   }
 

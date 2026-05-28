@@ -209,10 +209,13 @@
             <i class="fa-solid fa-arrow-left"></i> Back
           </button>
           <h2 id="bracket-view-title">Bracket</h2>
+          <button type="button" id="btn-bracket-toggle-groups" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-table"></i> Group stage
+          </button>
         </div>
         <div class="bracket-view-scroll">
-          <div id="bracket-view-groups"></div>
-          <div id="bracket-view-knockout"></div>
+          <div id="bracket-view-knockout" class="bracket-view-panel"></div>
+          <div id="bracket-view-groups" class="bracket-view-panel hidden"></div>
         </div>
         <div class="bracket-view-footer glass-panel">
           <a href="swipe.html" id="btn-bracket-make-own" class="btn btn-gold btn-block">

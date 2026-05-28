@@ -1,5 +1,5 @@
 /**
- * Read-only group standings + knockout results (no full simulator UI).
+ * Read-only bracket viewer: knockout tree + group stage tables.
  */
 (function (root, factory) {
   const BracketView = factory();
@@ -9,17 +9,19 @@
     root.BracketView = BracketView;
   }
 })(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : this, function () {
-  const KNOCKOUT_ROUNDS = [
-    { title: "Round of 32", from: 73, to: 88 },
-    { title: "Round of 16", from: 89, to: 96 },
-    { title: "Quarter-finals", from: 97, to: 100 },
-    { title: "Semi-finals", from: 101, to: 102 },
-    { title: "Third place", ids: [103] },
-    { title: "Final", ids: [104] }
-  ];
+  const BRACKET_LAYOUT = {
+    r32Left: [73, 75, 74, 77, 76, 78, 79, 80],
+    r32Right: [81, 82, 83, 84, 85, 87, 86, 88],
+    r16Left: [90, 89, 91, 92],
+    r16Right: [94, 93, 96, 95],
+    qfLeft: [97, 99],
+    qfRight: [98, 100],
+    sfLeft: [101],
+    sfRight: [102]
+  };
 
-  function teamLabel(teamsDb, teamId) {
-    if (!teamId || !teamsDb[teamId]) return "—";
+  function teamLabel(teamsDb, teamId, fallback) {
+    if (!teamId || !teamsDb[teamId]) return fallback || "TBD";
     const t = teamsDb[teamId];
     return `${t.flag} ${t.name}`;
   }
@@ -27,6 +29,131 @@
   function formatScore(score) {
     if (!score || score.scoreA === "" || score.scoreB === "") return "";
     return `${score.scoreA}–${score.scoreB}`;
+  }
+
+  function buildMatchCard(mId, options) {
+    const { teamsDb, knockoutPicks, knockoutScores, resolveMatch } = options;
+    const resolved = resolveMatch(mId) || {};
+    const teamA = resolved.a || resolved.teamA;
+    const teamB = resolved.b || resolved.teamB;
+    const winnerId = knockoutPicks[mId];
+    const score = knockoutScores[mId];
+    const scoreText = formatScore(score);
+
+    const card = document.createElement("div");
+    card.className = "bv-match-card glass-panel";
+    card.dataset.matchId = String(mId);
+
+    const meta = document.createElement("div");
+    meta.className = "bv-match-meta";
+    meta.innerHTML = `<span>M${mId}</span>${scoreText ? `<span class="bv-score-pill">${scoreText}</span>` : ""}`;
+    card.appendChild(meta);
+
+    [teamA, teamB].forEach((tid) => {
+      const slot = document.createElement("div");
+      slot.className = "bv-slot" + (winnerId && tid && winnerId === tid ? " bv-slot-winner" : "");
+      const flag = tid && teamsDb[tid] ? teamsDb[tid].flag : "🏳️";
+      const name = tid && teamsDb[tid] ? teamsDb[tid].name : "TBD";
+      slot.innerHTML = `<span class="bv-slot-flag">${flag}</span><span class="bv-slot-name">${name}</span>`;
+      card.appendChild(slot);
+    });
+
+    return card;
+  }
+
+  function fillColumn(colEl, matchIds, options) {
+    const list = document.createElement("div");
+    list.className = "bv-match-list";
+    matchIds.forEach((mId) => list.appendChild(buildMatchCard(mId, options)));
+    colEl.appendChild(list);
+  }
+
+  function buildCenterFinal(options) {
+    const { teamsDb, knockoutPicks, knockoutScores, resolveMatch } = options;
+    const wrap = document.createElement("div");
+    wrap.className = "bv-center-podium";
+
+    const thirdBox = document.createElement("div");
+    thirdBox.className = "bv-finals-box glass-panel";
+    thirdBox.innerHTML = '<div class="bv-finals-label"><i class="fa-solid fa-medal"></i> 3rd place</div>';
+    const thirdResolved = resolveMatch(103) || {};
+    const tA = thirdResolved.a || thirdResolved.teamA;
+    const tB = thirdResolved.b || thirdResolved.teamB;
+    const tWin = knockoutPicks[103];
+    const tScore = formatScore(knockoutScores[103]);
+    thirdBox.appendChild(buildMiniFinalPair(teamsDb, tA, tB, tWin, tScore));
+    wrap.appendChild(thirdBox);
+
+    const finalBox = document.createElement("div");
+    finalBox.className = "bv-finals-box glass-panel bv-finals-main";
+    finalBox.innerHTML = '<div class="bv-finals-label"><i class="fa-solid fa-crown"></i> Final</div>';
+    const fResolved = resolveMatch(104) || {};
+    const fA = fResolved.a || fResolved.teamA;
+    const fB = fResolved.b || fResolved.teamB;
+    const fWin = knockoutPicks[104];
+    const fScore = formatScore(knockoutScores[104]);
+    finalBox.appendChild(buildMiniFinalPair(teamsDb, fA, fB, fWin, fScore, true));
+    wrap.appendChild(finalBox);
+
+    return wrap;
+  }
+
+  function buildMiniFinalPair(teamsDb, teamA, teamB, winnerId, scoreText, isFinal) {
+    const row = document.createElement("div");
+    row.className = "bv-finals-pair";
+    if (scoreText) {
+      const sc = document.createElement("div");
+      sc.className = "bv-finals-score";
+      sc.textContent = scoreText;
+      row.appendChild(sc);
+    }
+    [teamA, teamB].forEach((tid) => {
+      const slot = document.createElement("div");
+      slot.className = "bv-slot" + (winnerId && tid && winnerId === tid ? " bv-slot-winner" : "");
+      if (isFinal && winnerId && tid === winnerId) slot.classList.add("bv-champion-slot");
+      const flag = tid && teamsDb[tid] ? teamsDb[tid].flag : "🏳️";
+      const name = tid && teamsDb[tid] ? teamsDb[tid].name : "TBD";
+      slot.innerHTML = `<span class="bv-slot-flag">${flag}</span><span class="bv-slot-name">${name}</span>`;
+      row.appendChild(slot);
+    });
+    return row;
+  }
+
+  function renderKnockoutTree(container, options) {
+    if (!container) return;
+    container.innerHTML = "";
+
+    const viewport = document.createElement("div");
+    viewport.className = "bv-tree-viewport";
+    const canvas = document.createElement("div");
+    canvas.className = "bv-tree-canvas";
+
+    function addColumn(title, matchIds, sideClass) {
+      const col = document.createElement("div");
+      col.className = `bv-tree-col ${sideClass || ""}`.trim();
+      const h = document.createElement("div");
+      h.className = "bv-col-title";
+      h.textContent = title;
+      col.appendChild(h);
+      fillColumn(col, matchIds, options);
+      canvas.appendChild(col);
+      return col;
+    }
+
+    addColumn("Round of 32", BRACKET_LAYOUT.r32Left, "bv-col-left");
+    addColumn("Round of 16", BRACKET_LAYOUT.r16Left, "bv-col-left");
+    addColumn("Quarter-finals", BRACKET_LAYOUT.qfLeft, "bv-col-left");
+    addColumn("Semi-finals", BRACKET_LAYOUT.sfLeft, "bv-col-left");
+
+    canvas.appendChild(buildCenterFinal(options));
+
+    addColumn("Semi-finals", BRACKET_LAYOUT.sfRight, "bv-col-right");
+    addColumn("Quarter-finals", BRACKET_LAYOUT.qfRight, "bv-col-right");
+    addColumn("Round of 16", BRACKET_LAYOUT.r16Right, "bv-col-right");
+    addColumn("Round of 32", BRACKET_LAYOUT.r32Right, "bv-col-right");
+
+    viewport.appendChild(canvas);
+    container.appendChild(viewport);
   }
 
   function renderGroups(container, options) {
@@ -43,14 +170,9 @@
 
     if (legacyKnockoutOnly) {
       container.innerHTML =
-        '<p class="bv-muted">Group stage scores were not included in this shared link — knockout picks only.</p>';
+        '<p class="bv-muted">Group stage was not saved with this bracket — only knockout picks are available.</p>';
       return;
     }
-
-    const heading = document.createElement("h3");
-    heading.className = "bv-section-title";
-    heading.innerHTML = '<i class="fa-solid fa-table"></i> Group stage';
-    container.appendChild(heading);
 
     const grid = document.createElement("div");
     grid.className = "bv-groups-grid";
@@ -93,7 +215,8 @@
             const score = groupMatchScores[key];
             const li = document.createElement("li");
             const scoreText = formatScore(score);
-            li.innerHTML = `<span>${teamLabel(teamsDb, m.teamA)} vs ${teamLabel(teamsDb, m.teamB)}</span>` +
+            li.innerHTML =
+              `<span>${teamLabel(teamsDb, m.teamA)} vs ${teamLabel(teamsDb, m.teamB)}</span>` +
               `<strong>${scoreText || "—"}</strong>`;
             matches.appendChild(li);
           });
@@ -104,74 +227,10 @@
     container.appendChild(grid);
   }
 
-  function renderKnockout(container, options) {
-    const { teamsDb, knockoutPicks, knockoutScores, resolveMatch } = options;
-    container.innerHTML = "";
-
-    const heading = document.createElement("h3");
-    heading.className = "bv-section-title";
-    heading.innerHTML = '<i class="fa-solid fa-sitemap"></i> Knockout';
-    container.appendChild(heading);
-
-    KNOCKOUT_ROUNDS.forEach((round) => {
-      const section = document.createElement("section");
-      section.className = "bv-knockout-round";
-
-      const h4 = document.createElement("h4");
-      h4.className = "bv-round-title";
-      h4.textContent = round.title;
-      section.appendChild(h4);
-
-      const list = document.createElement("div");
-      list.className = "bv-knockout-matches";
-
-      const matchIds = round.ids
-        ? round.ids
-        : Array.from({ length: round.to - round.from + 1 }, (_, i) => round.from + i);
-
-      matchIds.forEach((mId) => {
-        const resolved = resolveMatch(mId);
-        if (!resolved) return;
-
-        const { teamA, teamB } = resolved;
-        const winnerId = knockoutPicks[mId];
-        const score = knockoutScores[mId];
-        const scoreText = formatScore(score);
-
-        const row = document.createElement("div");
-        row.className = "bv-knockout-row glass-panel";
-
-        const slotA = document.createElement("span");
-        slotA.className = "bv-team" + (winnerId === teamA ? " bv-winner" : "");
-        slotA.textContent = teamLabel(teamsDb, teamA);
-
-        const slotB = document.createElement("span");
-        slotB.className = "bv-team" + (winnerId === teamB ? " bv-winner" : "");
-        slotB.textContent = teamLabel(teamsDb, teamB);
-
-        const mid = document.createElement("span");
-        mid.className = "bv-vs";
-        mid.textContent = scoreText || "vs";
-
-        row.appendChild(slotA);
-        row.appendChild(mid);
-        row.appendChild(slotB);
-        list.appendChild(row);
-      });
-
-      section.appendChild(list);
-      container.appendChild(section);
-    });
-  }
-
   function render(options) {
-    const groupsEl = options.groupsEl;
-    const knockoutEl = options.knockoutEl;
-    if (!groupsEl || !knockoutEl) return;
-
-    renderGroups(groupsEl, options);
-    renderKnockout(knockoutEl, options);
+    if (options.knockoutEl) renderKnockoutTree(options.knockoutEl, options);
+    if (options.groupsEl) renderGroups(options.groupsEl, options);
   }
 
-  return { render, renderGroups, renderKnockout };
+  return { render, renderKnockoutTree, renderGroups };
 });
