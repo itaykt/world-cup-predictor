@@ -8,7 +8,8 @@ const GROUPS_DATA = TournamentData.GROUPS_DATA;
 const GROUP_STAGE_MATCHES = TournamentData.GROUP_STAGE_MATCHES_FLAT;
 
 const APP_TITLE_DEFAULT = "Your 2026 World Cup, One Match at a Time";
-const SWIPE_INTRO_DISMISS_KEY = "wc_swipe_intro_seen_v1";
+/** Set when user taps "Start My World Cup"; cleared when intro is dismissed. */
+const SWIPE_INTRO_PENDING_KEY = "wc_swipe_intro_pending";
 const LOADING_LINES = [
   "Warming up the teams…",
   "Drawing the groups…",
@@ -187,32 +188,51 @@ function setDeckActiveMode(active) {
   document.body.classList.toggle("deck-active", !!active);
 }
 
-function hasSeenSwipeIntro() {
+function queueSwipeIntro() {
   try {
-    return localStorage.getItem(SWIPE_INTRO_DISMISS_KEY) === "1";
+    sessionStorage.setItem(SWIPE_INTRO_PENDING_KEY, "1");
+    localStorage.removeItem("wc_swipe_intro_seen_v1");
+  } catch (e) {
+    console.warn("Could not queue swipe intro", e);
+  }
+}
+
+function clearSwipeIntroPending() {
+  try {
+    sessionStorage.removeItem(SWIPE_INTRO_PENDING_KEY);
+    localStorage.removeItem("wc_swipe_intro_seen_v1");
+  } catch (e) {
+    console.warn("Could not clear swipe intro pending", e);
+  }
+}
+
+function shouldShowSwipeIntro() {
+  try {
+    return sessionStorage.getItem(SWIPE_INTRO_PENDING_KEY) === "1";
   } catch (_e) {
     return false;
   }
 }
 
-function markSwipeIntroSeen() {
-  try {
-    localStorage.setItem(SWIPE_INTRO_DISMISS_KEY, "1");
-  } catch (e) {
-    console.warn("Could not persist swipe intro flag", e);
-  }
-}
-
 function showSwipeIntroIfNeeded() {
-  if (!DOM.swipeIntroOverlay || hasSeenSwipeIntro()) return;
+  if (!DOM.swipeIntroOverlay || !shouldShowSwipeIntro()) return;
   DOM.swipeIntroOverlay.classList.remove("hidden");
+  DOM.swipeIntroOverlay.setAttribute("aria-hidden", "false");
   updateSwipeIntroForStage();
 }
 
 function hideSwipeIntro() {
   if (!DOM.swipeIntroOverlay) return;
   DOM.swipeIntroOverlay.classList.add("hidden");
-  markSwipeIntroSeen();
+  DOM.swipeIntroOverlay.setAttribute("aria-hidden", "true");
+  clearSwipeIntroPending();
+}
+
+function resetSwipeCardTransform(card) {
+  if (!card) return;
+  card.style.transition = "";
+  card.style.transform = "translate3d(0, 0, 0) rotate(0deg)";
+  card.classList.remove("swipe-out-left", "swipe-out-right", "swipe-out-up", "dragging");
 }
 
 function updateSwipeIntroForStage() {
@@ -289,6 +309,7 @@ function resetSwipeStateInMemory() {
 function beginWelcomeScreen() {
   resetSwipeStateInMemory();
   clearSwipeSession();
+  clearSwipeIntroPending();
 }
 
 /** Full reset when the user asks to start over. */
@@ -296,6 +317,7 @@ function initDefaultState() {
   resetSwipeStateInMemory();
   clearSwipeSession();
   clearSwipeProgressStorage();
+  clearSwipeIntroPending();
 }
 
 function clearSwipeProgressStorage() {
@@ -491,7 +513,8 @@ let cardEl = null;
 
 function bindSwipeGestures(card) {
   cardEl = card;
-  
+  resetSwipeCardTransform(card);
+
   card.addEventListener("mousedown", dragStart);
   card.addEventListener("touchstart", dragStart, { passive: true });
 }
@@ -521,8 +544,8 @@ function dragMove(e) {
   const dX = clientX - startX;
   const dY = clientY - startY;
   
-  const rotation = dX * 0.12 + dY * 0.04;
-  cardEl.style.transform = `translate(${dX}px, ${dY}px) rotate(${rotation}deg)`;
+  const rotation = dX * 0.1;
+  cardEl.style.transform = `translate3d(${dX}px, ${dY}px, 0) rotate(${rotation}deg)`;
   
   // Show Stamps proportional to distance
   const stampWinA = cardEl.querySelector(".stamp-win-a");
@@ -557,16 +580,9 @@ function dragEnd() {
   document.removeEventListener("mouseup", dragEnd);
   document.removeEventListener("touchend", dragEnd);
   
-  const currentTransform = cardEl.style.transform;
-  const match = currentTransform.match(/translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)/);
-  
-  let dX = 0;
-  let dY = 0;
-  
-  if (match) {
-    dX = parseFloat(match[1]);
-    dY = parseFloat(match[2]);
-  }
+  const matrix = new DOMMatrixReadOnly(getComputedStyle(cardEl).transform);
+  let dX = matrix.m41;
+  let dY = matrix.m42;
   
   const threshold = 110;
   
@@ -582,7 +598,7 @@ function dragEnd() {
   } else {
     // Snap back spring animation
     cardEl.style.transition = "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25)";
-    cardEl.style.transform = "translate(0, 0) rotate(0deg)";
+    resetSwipeCardTransform(cardEl);
     
     // Fade out stamps
     const stampWinA = cardEl.querySelector(".stamp-win-a");
@@ -597,8 +613,6 @@ function dragEnd() {
 // --- 7. APPLY PREDICTIONS & BACKGROUND ROUTER ---
 function applySwipePrediction(direction) {
   if (!cachedActiveMatch || cachedActiveMatch.stage === "completed") return;
-
-  hideSwipeIntro();
 
   // PUSH Snapshot for Undo
   pushStateSnapshot();
@@ -644,7 +658,7 @@ function applySwipePrediction(direction) {
       historyStack.pop(); // Clear pushed snapshot since it bounced
       if (card) {
         card.style.transition = "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25)";
-        card.style.transform = "translate(0, 0) rotate(0deg)";
+        resetSwipeCardTransform(card);
         const stampDraw = card.querySelector(".stamp-draw");
         if (stampDraw) stampDraw.style.opacity = 0;
       }
@@ -898,7 +912,7 @@ function renderActiveCardDeck() {
       </div>
 
       <div class="card-team-stars">
-        <span>Match insights</span>
+        <span class="card-insights-label">MATCH INSIGHTS</span>
         ${teamA.name} (${teamA.stars[0]}) vs ${teamB.name} (${teamB.stars[0]}). ${teamA.history.split(".")[0]}.
       </div>
     `;
@@ -1697,6 +1711,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       state.wizardStep = "md1"; // Start with Group Stage matches
       markSwipeSessionActive();
       clearSwipeProgressStorage();
+      queueSwipeIntro();
       saveToLocalStorage();
       updateHeaderTitle();
       renderActiveCardDeck();
