@@ -160,10 +160,36 @@ const DOM = {
 // --- INITIALIZE & LOCAL STORAGE PERSISTENCE ---
 const SWIPE_PROGRESS_KEY = "wc_2026_swipe_progress";
 const LEGACY_PROGRESS_KEY = "wc_2026_simulator_save";
+/** Tab session flag — refresh keeps this; new tab/window does not (welcome screen). */
+const SWIPE_SESSION_KEY = "wc_swipe_session_active";
 /** Keep in-progress predictions for 14 days, then show welcome again. */
 const SWIPE_PROGRESS_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
-function initDefaultState() {
+function isSwipeSessionActive() {
+  try {
+    return sessionStorage.getItem(SWIPE_SESSION_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+
+function markSwipeSessionActive() {
+  try {
+    sessionStorage.setItem(SWIPE_SESSION_KEY, "1");
+  } catch (e) {
+    console.warn("Could not mark swipe session", e);
+  }
+}
+
+function clearSwipeSession() {
+  try {
+    sessionStorage.removeItem(SWIPE_SESSION_KEY);
+  } catch (e) {
+    console.warn("Could not clear swipe session", e);
+  }
+}
+
+function resetSwipeStateInMemory() {
   state.wizardStep = "welcome";
   state.isViewer = false;
   state.userName = "";
@@ -178,11 +204,23 @@ function initDefaultState() {
   for (const g of Object.keys(GROUPS_DATA)) {
     state.groupStandings[g] = [...GROUPS_DATA[g]];
   }
-  historyStack.length = 0; // Clear history
+  historyStack.length = 0;
   refreshActiveMatchCache();
   if (typeof CelebrationEffects !== "undefined") {
     CelebrationEffects.stopCelebration();
   }
+}
+
+/** Welcome screen for a new visit (does not read or wipe saved progress on disk). */
+function beginWelcomeScreen() {
+  resetSwipeStateInMemory();
+  clearSwipeSession();
+}
+
+/** Full reset when the user asks to start over. */
+function initDefaultState() {
+  resetSwipeStateInMemory();
+  clearSwipeSession();
   clearSwipeProgressStorage();
 }
 
@@ -311,6 +349,7 @@ function tryRestoreSwipeProgress() {
 
   recalculateStandings();
   refreshActiveMatchCache();
+  markSwipeSessionActive();
   return { restored: true };
 }
 
@@ -1449,7 +1488,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (userRequestedFreshStart()) {
     initDefaultState();
     stripFreshStartParamsFromUrl();
-  } else {
+  } else if (isSwipeSessionActive()) {
     const resume = tryRestoreSwipeProgress();
     if (resume.restored) {
       if (DOM.inputUserName && state.userName) {
@@ -1459,8 +1498,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (resume.expired) {
         showToast("Your saved session expired — start a new prediction.");
       }
-      initDefaultState();
+      beginWelcomeScreen();
     }
+  } else {
+    beginWelcomeScreen();
   }
 
   refreshActiveMatchCache();
@@ -1504,6 +1545,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
       state.userName = nameVal;
       state.wizardStep = "md1"; // Start with Group Stage matches
+      markSwipeSessionActive();
+      clearSwipeProgressStorage();
       saveToLocalStorage();
       updateHeaderTitle();
       renderActiveCardDeck();

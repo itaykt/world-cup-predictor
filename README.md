@@ -15,7 +15,7 @@ Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or
 
 **Share either URL** (both open Swipe Cup): `…/swipe.html` or `…/` (root redirects instantly).
 
-In-progress predictions are saved in the browser for **14 days** (reload resumes where you left off). Force a fresh start with `swipe.html?restart=1` or **Swipe New Bracket** / **Reset** on the app.
+Opening [swipe.html](swipe.html) always starts at **Enter your name** (new tab or return visit). **Refreshing the same tab** resumes your bracket (saved in that browser only for up to 14 days). Force a fresh start with `swipe.html?restart=1` or **Swipe New Bracket** / **Reset**.
 
 ## Development
 
