@@ -1,0 +1,22 @@
+{
+  "name": "world-cup-fan-bracket",
+  "version": "1.0.0",
+  "private": true,
+  "description": "World Cup 2026 fan bracket simulator (static GitHub Pages app)",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "ci": "npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0",
+    "vitest": "^3.2.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

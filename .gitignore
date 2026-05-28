@@ -2,3 +2,5 @@
 .gemini/
 node_modules/
 *.log
+coverage/
+.eslintcache

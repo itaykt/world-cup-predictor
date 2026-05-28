@@ -1095,35 +1095,26 @@ function revealPodiumChampionship() {
 
 // --- 11. EVENT REGISTRATION DOMCONTENTLOADED ---
 window.addEventListener("DOMContentLoaded", () => {
-  // Check if viewing a shared bracket via URL parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const shareParam = urlParams.get("share");
-  
-  if (shareParam) {
-    try {
-      const decoded = JSON.parse(decodeURIComponent(escape(atob(shareParam))));
-      state.userName = decoded.name;
-      state.knockoutPicks = decoded.picks;
-      state.wizardStep = "championship";
-      state.isViewer = true; // Read-only mode flag
-      recalculateStandings();
-    } catch (err) {
-      console.error("Failed to parse shared prediction data:", err);
-      showToast("Invalid shared link", true);
+  // Shared links open the full bracket viewer on index.html (GitHub Pages friendly)
+  const shareCode = typeof BracketShare !== "undefined" ? BracketShare.extractShareCodeFromPage() : null;
+  if (shareCode) {
+    const result = BracketShare.decodeShareCode(shareCode);
+    if (result.ok) {
+      window.location.replace(BracketShare.buildBracketViewUrl(result.payload, window.location.href));
+      return;
     }
+    showToast("Invalid shared link", true);
+  }
+
+  const loaded = loadFromLocalStorage();
+  if (!loaded) {
+    initDefaultState();
+    saveToLocalStorage();
   } else {
-    // Load state or start new simulation
-    const loaded = loadFromLocalStorage();
-    if (!loaded) {
-      initDefaultState();
-      saveToLocalStorage();
-    } else {
-      // If name is empty, force them to welcome but DO NOT wipe predictions!
-      if (!state.userName) {
-        state.wizardStep = "welcome";
-      }
-      recalculateStandings();
+    if (!state.userName) {
+      state.wizardStep = "welcome";
     }
+    recalculateStandings();
   }
 
   // Refresh active match cache before rendering first card
@@ -1169,15 +1160,13 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   DOM.btnGoToMainBracket.addEventListener("click", () => {
-    // Re-evaluate main standings compatibility
     recalculateStandings();
     state.wizardStep = "championship";
     saveToLocalStorage();
-    
-    showToast("Transferring to main dashboard...");
+    showToast("Opening full bracket…");
     setTimeout(() => {
       window.location.href = "index.html";
-    }, 800);
+    }, 400);
   });
 
   // Welcome screen name registration
@@ -1220,16 +1209,15 @@ window.addEventListener("DOMContentLoaded", () => {
       const runner = TEAMS_DB[runnerId];
       const third = TEAMS_DB[thirdId];
 
-      // Serialize prediction data to base64 for static serverless URL sharing
-      let shareUrl = "https://itaykt.github.io/world-cup-predictor/swipe.html";
+      // Full bracket in URL hash — works on static GitHub Pages hosting
+      let shareUrl = "";
       try {
-        const serialized = btoa(unescape(encodeURIComponent(JSON.stringify({
-          name: state.userName,
-          picks: state.knockoutPicks
-        }))));
-        shareUrl = `${window.location.origin}${window.location.pathname}?share=${serialized}`;
+        recalculateStandings();
+        const payload = BracketShare.payloadFromSimulatorState(state);
+        shareUrl = BracketShare.buildBracketViewUrl(payload, window.location.href);
       } catch (err) {
         console.error("Failed to generate share URL:", err);
+        shareUrl = new URL("index.html", window.location.href).href;
       }
 
       let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;

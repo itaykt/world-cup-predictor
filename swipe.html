@@ -11,9 +11,21 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="swipe.css?v=4.0">
+  <link rel="stylesheet" href="swipe.css?v=4.2">
 </head>
 <body>
+  <!-- Animated stadium mesh background (decorative) -->
+  <div class="swipe-bg" aria-hidden="true">
+    <div class="swipe-bg-base"></div>
+    <div class="swipe-bg-grid"></div>
+    <span class="swipe-bg-orb orb-1"></span>
+    <span class="swipe-bg-orb orb-2"></span>
+    <span class="swipe-bg-orb orb-3"></span>
+    <span class="swipe-bg-orb orb-4"></span>
+    <span class="swipe-bg-orb orb-5"></span>
+    <div class="swipe-bg-shine"></div>
+  </div>
+
   <!-- Toast notifications -->
   <div id="toast-el" class="toast-notification hidden">
     <i class="fa-solid fa-circle-check"></i>
@@ -196,6 +208,7 @@
     </footer>
   </div>
   <!-- JavaScript Predictor Logic -->
-  <script src="swipe.js?v=4.0"></script>
+  <script src="share-utils.js"></script>
+  <script src="swipe.js?v=4.3"></script>
 </body>
 </html>

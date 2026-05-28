@@ -1381,12 +1381,23 @@ h1, h2, h3, h4, .wizard-stepper .step-node {
 
 .banner-content {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 10px 16px;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--bg-slate-950);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banner-content a.btn {
+  text-decoration: none;
+}
+
+#viewer-owner-name {
+  font-weight: 900;
 }
 
 

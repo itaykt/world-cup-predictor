@@ -137,7 +137,10 @@ let state = {
   anthropicKey: "",
 
   // Viewer read-only flag
-  isViewer: false
+  isViewer: false,
+
+  // Display name (Swipe Cup + shared links)
+  userName: ""
 };
 
 // --- INITIALIZE STATE ---
@@ -152,6 +155,7 @@ function initDefaultState() {
   state.actualResults = null;
   state.anthropicKey = localStorage.getItem("anthropic_key") || "";
   state.isViewer = false;
+  state.userName = "";
   
   for (const group of Object.keys(GROUPS_DATA)) {
     state.groupStandings[group] = [...GROUPS_DATA[group]];
@@ -249,8 +253,9 @@ const DOM = {
   toastEl: document.getElementById("toast-el"),
   toastMsg: document.getElementById("toast-msg"),
   viewerBanner: document.getElementById("viewer-banner"),
+  viewerOwnerName: document.getElementById("viewer-owner-name"),
+  btnMakePrediction: document.getElementById("btn-make-prediction"),
   btnCopyShared: document.getElementById("btn-copy-shared"),
-  btnCreateOwn: document.getElementById("btn-create-own"),
 
   // Settings modal
   btnShowSettings: document.getElementById("btn-show-settings"),
@@ -303,6 +308,7 @@ function loadFromLocalStorage() {
     try {
       const data = JSON.parse(save);
       state.wizardStep = data.wizardStep || "welcome";
+      state.userName = data.userName || "";
       state.groupMatchScores = data.groupMatchScores || {};
       state.knockoutScores = data.knockoutScores || {};
       state.knockoutPicks = data.knockoutPicks || {};
@@ -1594,35 +1600,40 @@ DOM.btnModalZoomReset.addEventListener("click", resetModalZoom);
 
 // --- 10. BRACKET SAVING & SERIALIZING SHARE UTILS ---
 function exportStateToString() {
-  const data = {
-    step: state.wizardStep,
-    gScores: state.groupMatchScores,
-    kScores: state.knockoutScores,
-    kPicks: state.knockoutPicks,
-    thirds: state.thirdPlaceQualifiers,
-    standings: state.groupStandings
-  };
-  const json = JSON.stringify(data);
-  return btoa(unescape(encodeURIComponent(json)));
+  return BracketShare.encodePayload(BracketShare.payloadFromSimulatorState(state));
 }
 
 function importStateFromString(hashStr) {
-  try {
-    const json = decodeURIComponent(escape(atob(hashStr)));
-    const data = JSON.parse(json);
-    
-    if (data.step) state.wizardStep = data.step;
-    if (data.gScores) state.groupMatchScores = data.gScores;
-    if (data.kScores) state.knockoutScores = data.kScores;
-    if (data.kPicks) state.knockoutPicks = data.kPicks;
-    if (data.thirds) state.thirdPlaceQualifiers = data.thirds;
-    if (data.standings) state.groupStandings = data.standings;
-    
-    return true;
-  } catch (err) {
-    console.error("Shared parsing failed:", err);
-    return false;
+  const result = BracketShare.decodeShareCode(hashStr);
+  if (!result.ok) return false;
+  BracketShare.applyPayloadToState(state, result.payload);
+  return true;
+}
+
+function updateViewerBanner() {
+  const name = state.userName || "A fan";
+  if (DOM.viewerOwnerName) {
+    DOM.viewerOwnerName.textContent = name;
   }
+}
+
+function enterSharedViewerMode() {
+  state.isViewer = true;
+  updateViewerBanner();
+  if (DOM.viewerBanner) DOM.viewerBanner.classList.remove("hidden");
+
+  recalculateAllGroupStandings();
+
+  DOM.stepNodes.forEach((node) => {
+    node.classList.add("completed");
+    node.classList.remove("active");
+  });
+  DOM.stepLines.forEach((line) => line.classList.add("completed"));
+
+  switchWizardStep("championship");
+  renderCompleteModalBracket();
+  if (DOM.bracketModal) DOM.bracketModal.classList.remove("hidden");
+  setTimeout(resetModalZoom, 150);
 }
 
 // Sidebar Settings
@@ -1734,14 +1745,6 @@ DOM.btnImportCode.addEventListener("click", () => {
 
 
 // --- 11. VIEWER READ ONLY BUTTONS ---
-DOM.btnCreateOwn.addEventListener("click", () => {
-  window.location.hash = "";
-  initDefaultState();
-  DOM.viewerBanner.classList.add("hidden");
-  switchWizardStep("welcome");
-  showToast("Edit mode unlocked!");
-});
-
 DOM.btnCopyShared.addEventListener("click", () => {
   state.isViewer = false;
   DOM.viewerBanner.classList.add("hidden");
@@ -2801,17 +2804,20 @@ window.addEventListener("DOMContentLoaded", () => {
   // Try loading from localStorage first (persistence)
   const hadSave = loadFromLocalStorage();
 
-  // Override if shared link hash parameters exist
-  const hash = window.location.hash;
-  if (hash && hash.startsWith("#share=")) {
-    const code = hash.split("#share=")[1];
-    const success = importStateFromString(code);
-    if (success) {
-      state.isViewer = true;
-      DOM.viewerBanner.classList.remove("hidden");
-      showToast("Shared predictions loaded successfully!");
+  // Override if shared link (#share= or ?share=) — full bracket in URL for GitHub Pages
+  const shareCode = BracketShare.extractShareCodeFromPage();
+  if (shareCode) {
+    const result = BracketShare.decodeShareCode(shareCode);
+    if (result.ok) {
+      BracketShare.applyPayloadToState(state, result.payload);
+      enterSharedViewerMode();
+      if (result.payload.legacyKnockoutOnly) {
+        showToast("Legacy link — knockout tree shown (group scores unavailable).");
+      } else {
+        showToast("Shared bracket loaded!");
+      }
     } else {
-      showToast("Fail to read shared code.", true);
+      showToast("Could not read this share link.", true);
     }
   }
 
