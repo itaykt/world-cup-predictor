@@ -252,10 +252,9 @@ const DOM = {
   // General Notification Banner
   toastEl: document.getElementById("toast-el"),
   toastMsg: document.getElementById("toast-msg"),
-  viewerBanner: document.getElementById("viewer-banner"),
-  viewerOwnerName: document.getElementById("viewer-owner-name"),
-  btnMakePrediction: document.getElementById("btn-make-prediction"),
-  btnCopyShared: document.getElementById("btn-copy-shared"),
+  sharedBracketFooter: document.getElementById("shared-bracket-footer"),
+  sharedBracketTitle: document.getElementById("shared-bracket-title"),
+  appContainer: document.getElementById("app-container"),
 
   // Settings modal
   btnShowSettings: document.getElementById("btn-show-settings"),
@@ -1578,6 +1577,7 @@ DOM.btnShowFullBracket.addEventListener("click", () => {
 });
 
 DOM.btnCloseBracket.addEventListener("click", () => {
+  if (state.isViewer) return;
   DOM.bracketModal.classList.add("hidden");
 });
 
@@ -1610,29 +1610,30 @@ function importStateFromString(hashStr) {
   return true;
 }
 
-function updateViewerBanner() {
+function getSharedBracketTitleHtml() {
   const name = state.userName || "A fan";
-  if (DOM.viewerOwnerName) {
-    DOM.viewerOwnerName.textContent = name;
-  }
+  const label = name.endsWith("s") ? `${name}'` : `${name}'s`;
+  return `<i class="fa-solid fa-trophy highlight-gold"></i> ${label} World Cup 2026 Bracket`;
 }
 
 function enterSharedViewerMode() {
   state.isViewer = true;
-  updateViewerBanner();
-  if (DOM.viewerBanner) DOM.viewerBanner.classList.remove("hidden");
+  document.body.classList.add("shared-bracket-mode");
+  document.title = `${state.userName || "Shared"} World Cup 2026 Bracket`;
+
+  if (DOM.sharedBracketTitle) {
+    DOM.sharedBracketTitle.innerHTML = getSharedBracketTitleHtml();
+  } else {
+    const headerTitle = DOM.bracketModal?.querySelector(".modal-header h3");
+    if (headerTitle) headerTitle.innerHTML = getSharedBracketTitleHtml();
+  }
 
   recalculateAllGroupStandings();
-
-  DOM.stepNodes.forEach((node) => {
-    node.classList.add("completed");
-    node.classList.remove("active");
-  });
-  DOM.stepLines.forEach((line) => line.classList.add("completed"));
-
-  switchWizardStep("championship");
   renderCompleteModalBracket();
+
   if (DOM.bracketModal) DOM.bracketModal.classList.remove("hidden");
+  if (DOM.sharedBracketFooter) DOM.sharedBracketFooter.classList.remove("hidden");
+
   setTimeout(resetModalZoom, 150);
 }
 
@@ -1715,7 +1716,7 @@ DOM.btnLoadJsonTrigger.addEventListener("click", () => {
         } else {
           showToast("Invalid JSON schema.", true);
         }
-      } catch (err) {
+      } catch {
         showToast("Error loading file.", true);
       }
     };
@@ -1741,15 +1742,6 @@ DOM.btnImportCode.addEventListener("click", () => {
   } else {
     showToast("Invalid bracket code, please try again.", true);
   }
-});
-
-
-// --- 11. VIEWER READ ONLY BUTTONS ---
-DOM.btnCopyShared.addEventListener("click", () => {
-  state.isViewer = false;
-  DOM.viewerBanner.classList.add("hidden");
-  showToast("Predictions copied! You can now edit and save your customized bracket.");
-  switchWizardStep("md1");
 });
 
 
@@ -2733,8 +2725,6 @@ function renderAccuracyBreakdown() {
   // Process Knockouts
   for (let mId = 73; mId <= 104; mId++) {
     const match = KNOCKOUT_MATCHES[mId];
-    const resolved = match.resolve();
-
     const pred = state.knockoutScores[mId];
     const predWinnerId = state.knockoutPicks[mId];
     const actual = state.actualResults.knockoutScores[mId];
@@ -2802,7 +2792,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initDefaultState();
   
   // Try loading from localStorage first (persistence)
-  const hadSave = loadFromLocalStorage();
+  loadFromLocalStorage();
 
   // Override if shared link (#share= or ?share=) — full bracket in URL for GitHub Pages
   const shareCode = BracketShare.extractShareCodeFromPage();
@@ -2938,14 +2928,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Bracket Slots button click event hooks
   document.querySelectorAll(".btn-save-slot").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", () => {
       const slot = parseInt(btn.dataset.slot);
       saveBracketSlot(slot);
     });
   });
 
   document.querySelectorAll(".btn-load-slot").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", () => {
       const slot = parseInt(btn.dataset.slot);
       loadBracketSlot(slot);
     });
@@ -2993,7 +2983,7 @@ window.addEventListener("DOMContentLoaded", () => {
           } else {
             showToast("Invalid results file schema.", true);
           }
-        } catch (err) {
+        } catch {
           showToast("Failed to parse JSON file.", true);
         }
       };

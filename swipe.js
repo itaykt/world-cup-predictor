@@ -492,7 +492,7 @@ function dragMove(e) {
   }
 }
 
-function dragEnd(e) {
+function dragEnd() {
   if (!isDragging || !cardEl || !cachedActiveMatch) return;
   
   isDragging = false;
@@ -758,7 +758,7 @@ function simulateStageProbabilistic() {
   refreshActiveMatchCache();
   renderActiveCardDeck();
 
-  showToast(`⚡ ${stageLabel} simulated based on ELO!`);
+  showToast(`⚡ ${stageLabel}: ${simulatedCount} matches simulated (ELO-based)!`);
 }
 
 // --- 7.6. PERSONALIZATION HELPERS ---

@@ -23,16 +23,7 @@
   <!-- Confetti Canvas -->
   <canvas id="confetti-canvas"></canvas>
 
-  <!-- Shared Viewer Mode Banner -->
-  <div id="viewer-banner" class="viewer-banner hidden">
-    <div class="banner-content">
-      <span id="viewer-banner-label"><i class="fa-solid fa-eye animate-pulse"></i> <strong id="viewer-owner-name">A fan</strong>'s World Cup 2026 bracket</span>
-      <a href="swipe.html" id="btn-make-prediction" class="btn btn-primary btn-sm"><i class="fa-solid fa-hand-pointer"></i> Make your prediction</a>
-      <button id="btn-copy-shared" class="btn btn-secondary btn-sm" type="button"><i class="fa-solid fa-copy"></i> Copy to edit</button>
-    </div>
-  </div>
-
-  <div class="app-container">
+  <div class="app-container" id="app-container">
     <!-- App Header -->
     <header class="app-header">
       <div class="header-brand">
@@ -397,14 +388,14 @@
   <!-- MODAL A: FULL INTERACTIVE BRACKET VIEW -->
   <div class="modal-overlay hidden" id="bracket-modal">
     <div class="modal-card wide-modal glass-panel">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-diagram-project highlight-gold"></i> Complete Tournament Tree</h3>
-        <button class="btn-close" id="btn-close-bracket"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header" id="shared-bracket-header">
+        <h3 id="shared-bracket-title"><i class="fa-solid fa-diagram-project highlight-gold"></i> Complete Tournament Tree</h3>
+        <button class="btn-close" id="btn-close-bracket" type="button" aria-label="Close bracket"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body scrollable-modal-body">
+      <div class="modal-body scrollable-modal-body" id="bracket-modal-body">
         
         <!-- Zoom controls in modal -->
-        <div class="modal-bracket-controls">
+        <div class="modal-bracket-controls" id="modal-bracket-controls">
           <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-in"><i class="fa-solid fa-plus"></i></button>
           <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-out"><i class="fa-solid fa-minus"></i></button>
           <button class="btn btn-secondary btn-sm" id="btn-modal-zoom-reset"><i class="fa-solid fa-arrows-to-eye"></i> Centered View</button>
@@ -506,6 +497,13 @@
         </div>
 
       </div>
+
+      <footer id="shared-bracket-footer" class="shared-bracket-footer hidden">
+        <a href="swipe.html" id="btn-make-prediction" class="shared-bracket-cta">
+          <span class="shared-cta-kicker">Think you can do better?</span>
+          <span class="shared-cta-action">Make your prediction <i class="fa-solid fa-arrow-right-long"></i></span>
+        </a>
+      </footer>
     </div>
   </div>
 
