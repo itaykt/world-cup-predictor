@@ -159,6 +159,7 @@ function getWildcardForSlot(idx) {
 // --- 2. APPLICATION STATE ENGINE & HISTORY SNAPSHOTS ---
 let state = {
   wizardStep: "welcome", // Share compatible
+  userName: "",
   groupMatchScores: {},
   groupStandings: {},
   knockoutScores: {},
@@ -193,14 +194,18 @@ function refreshActiveMatchCache() {
 
 // --- DOM ELEMENT CACHE ---
 const DOM = {
+  paneSwipeWelcome: document.getElementById("pane-swipe-welcome"),
   paneSwipeDeck: document.getElementById("pane-swipe-deck"),
   paneSwipePodium: document.getElementById("pane-swipe-podium"),
   
+  appHeaderTitle: document.getElementById("app-header-title"),
   stepperStageTitle: document.getElementById("stepper-stage-title"),
   stepperMatchProgress: document.getElementById("stepper-match-progress"),
   progressBarFill: document.getElementById("progress-bar-fill"),
   cardDeckContainer: document.getElementById("card-deck-container"),
   
+  inputUserName: document.getElementById("input-user-name"),
+  btnStartPrediction: document.getElementById("btn-start-prediction"),
   btnSimulateStage: document.getElementById("btn-simulate-stage"),
   btnUndo: document.getElementById("btn-undo"),
   btnChoiceLeft: document.getElementById("btn-choice-left"),
@@ -223,13 +228,15 @@ const DOM = {
   statAvgGoals: document.getElementById("stat-avg-goals"),
   quickUpsetMatch: document.getElementById("quick-upset-match"),
   
+  btnShareResults: document.getElementById("btn-share-results"),
   btnGoToMainBracket: document.getElementById("btn-go-to-main-bracket"),
   btnRestartSwipe: document.getElementById("btn-restart-swipe")
 };
 
 // --- INITIALIZE & LOCAL STORAGE PERSISTENCE ---
 function initDefaultState() {
-  state.wizardStep = "md1";
+  state.wizardStep = "welcome";
+  state.userName = "";
   state.groupMatchScores = {};
   state.knockoutScores = {};
   state.knockoutPicks = {};
@@ -253,7 +260,8 @@ function loadFromLocalStorage() {
   if (save) {
     try {
       const data = JSON.parse(save);
-      state.wizardStep = data.wizardStep || "md1";
+      state.wizardStep = data.wizardStep || "welcome";
+      state.userName = data.userName || "";
       state.groupMatchScores = data.groupMatchScores || {};
       state.knockoutScores = data.knockoutScores || {};
       state.knockoutPicks = data.knockoutPicks || {};
@@ -753,6 +761,18 @@ function simulateStageProbabilistic() {
   showToast(`⚡ ${stageLabel} simulated based on ELO!`);
 }
 
+// --- 7.6. PERSONALIZATION HELPERS ---
+function updateHeaderTitle() {
+  if (!DOM.appHeaderTitle) return;
+  if (state.userName) {
+    const name = state.userName;
+    const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
+    DOM.appHeaderTitle.innerText = `${title} Prediction`;
+  } else {
+    DOM.appHeaderTitle.innerText = "World Cup 2026 Prediction";
+  }
+}
+
 // --- 8. UNDO ENGINE (POP SNAPSHOTS) ---
 function triggerUndo() {
   const popped = popStateSnapshot();
@@ -773,13 +793,24 @@ function renderActiveCardDeck() {
     refreshActiveMatchCache();
   }
   
-  // Check if completed simulation!
+  // A. Check if welcome screen is active
+  if (state.wizardStep === "welcome") {
+    if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.remove("hidden");
+    DOM.paneSwipeDeck.classList.add("hidden");
+    DOM.paneSwipePodium.classList.add("hidden");
+    updateHeaderTitle();
+    return;
+  } else {
+    if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
+  }
+  
+  // B. Check if completed simulation!
   if (cachedActiveMatch.stage === "completed") {
     revealPodiumChampionship();
     return;
   }
 
-  // Switch screen view if panel was in podium
+  // Switch screen view if panel was in podium or welcome
   DOM.paneSwipeDeck.classList.remove("hidden");
   DOM.paneSwipePodium.classList.add("hidden");
 
@@ -928,12 +959,14 @@ function getKnockoutRoundTitle(mId) {
 
 // --- 10. CHAMPIONSHIP REVEAL & CTA ---
 function revealPodiumChampionship() {
+  if (DOM.paneSwipeWelcome) DOM.paneSwipeWelcome.classList.add("hidden");
   DOM.paneSwipeDeck.classList.add("hidden");
   DOM.paneSwipePodium.classList.remove("hidden");
   
   // Set championship step for shared compatibility
   state.wizardStep = "championship";
   saveToLocalStorage();
+  updateHeaderTitle();
 
   // Resolve Podium Winners
   const champId = state.knockoutPicks[104];
@@ -1083,6 +1116,98 @@ window.addEventListener("DOMContentLoaded", () => {
       window.location.href = "index.html";
     }, 800);
   });
+
+  // Welcome screen name registration
+  if (DOM.btnStartPrediction) {
+    DOM.btnStartPrediction.addEventListener("click", () => {
+      if (!DOM.inputUserName) return;
+      const nameVal = DOM.inputUserName.value.trim();
+      if (!nameVal) {
+        showToast("Please enter your name to start!", true);
+        return;
+      }
+      state.userName = nameVal;
+      state.wizardStep = "md1"; // Start with Group Stage matches
+      saveToLocalStorage();
+      updateHeaderTitle();
+      renderActiveCardDeck();
+      showToast(`Welcome, ${nameVal}!`);
+    });
+  }
+
+  if (DOM.inputUserName) {
+    DOM.inputUserName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (DOM.btnStartPrediction) DOM.btnStartPrediction.click();
+      }
+    });
+  }
+
+  // Share Results CTR
+  if (DOM.btnShareResults) {
+    DOM.btnShareResults.addEventListener("click", async () => {
+      const name = state.userName || "My";
+      const title = name.endsWith("s") ? `${name}'` : `${name}'s`;
+      
+      const champId = state.knockoutPicks[104];
+      const runnerId = champId === KNOCKOUT_MATCHES[104].resolve().a ? KNOCKOUT_MATCHES[104].resolve().b : KNOCKOUT_MATCHES[104].resolve().a;
+      const thirdId = state.knockoutPicks[103];
+
+      const champ = TEAMS_DB[champId];
+      const runner = TEAMS_DB[runnerId];
+      const third = TEAMS_DB[thirdId];
+
+      let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;
+      if (champ) text += `🥇 CHAMPION: ${champ.flag} ${champ.name.toUpperCase()}\n`;
+      if (runner) text += `🥈 RUNNER-UP: ${runner.flag} ${runner.name}\n`;
+      if (third) text += `🥉 THIRD PLACE: ${third.flag} ${third.name}\n\n`;
+
+      // Semi-finalists (picks from 101, 102)
+      const sfTeams = [101, 102].map(mId => {
+        const wId = state.knockoutPicks[mId];
+        return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
+      }).filter(Boolean);
+      if (sfTeams.length > 0) {
+        text += `🔥 SEMI-FINALISTS:\n• ${sfTeams.join('\n• ')}\n\n`;
+      }
+
+      // Quarter-finalists (picks from 97, 98, 99, 100)
+      const qfTeams = [97, 98, 99, 100].map(mId => {
+        const wId = state.knockoutPicks[mId];
+        return wId ? `${TEAMS_DB[wId].flag} ${TEAMS_DB[wId].name}` : "";
+      }).filter(Boolean);
+      if (qfTeams.length > 0) {
+        text += `⚡ QUARTER-FINALISTS:\n• ${qfTeams.join('\n• ')}\n\n`;
+      }
+
+      text += `Simulated on Swipe Cup ⚽ Predict yours at: https://itaykt.github.io/world-cup-predictor/swipe.html`;
+
+      const shareData = {
+        title: `${title} World Cup Prediction`,
+        text: text,
+        url: "https://itaykt.github.io/world-cup-predictor/swipe.html"
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showToast("Shared successfully!");
+          return;
+        } catch (err) {
+          console.log("Share failed or cancelled", err);
+        }
+      }
+
+      // Clipboard fallback
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("📋 Results rundown copied to clipboard!");
+      } catch (err) {
+        console.error("Clipboard copy failed:", err);
+        showToast("Clipboard copy failed. Please copy manually.", true);
+      }
+    });
+  }
 
   // KEYBOARD NAVIGATION SHORTCUTS
   window.addEventListener("keydown", (e) => {

@@ -25,11 +25,32 @@
     <header class="app-header glass-panel">
       <div class="header-brand" style="justify-content: center; width: 100%;">
         <span class="brand-logo" style="margin-right: 8px;"><i class="fa-solid fa-trophy text-gold-glow"></i></span>
-        <h1 style="font-size: 1.15rem; letter-spacing: 0.02em;">World Cup 2026 Prediction</h1>
+        <h1 id="app-header-title" style="font-size: 1.15rem; letter-spacing: 0.02em;">World Cup 2026 Prediction</h1>
       </div>
     </header>
 
     <main class="swipe-main-content">
+      <!-- PANE 0: WELCOME SCREEN -->
+      <section id="pane-swipe-welcome" class="swipe-pane hidden">
+        <div class="welcome-glass-card glass-panel text-center">
+          <div class="welcome-logo-animated"><i class="fa-solid fa-trophy highlight-gold fa-bounce"></i></div>
+          <span class="sub-podium-label">SWIPE CUP 2026</span>
+          <h2>World Cup Prediction</h2>
+          <p class="welcome-intro">Predict the world's biggest tournament match-by-match with fast, Tinder-style swiping!</p>
+          
+          <div class="name-input-container">
+            <label for="input-user-name" class="input-label">Your Name</label>
+            <input type="text" id="input-user-name" class="glass-input" placeholder="e.g. John Doe" maxlength="25">
+          </div>
+
+          <div class="podium-cta-box" style="margin-top: 15px; width: 100%;">
+            <button id="btn-start-prediction" class="btn btn-gold btn-lg btn-block pulse-gold">
+              <i class="fa-solid fa-play"></i> Start Simulation
+            </button>
+          </div>
+        </div>
+      </section>
+
       <!-- PANE 1: CARD DECK SIMULATION VIEW -->
       <section id="pane-swipe-deck" class="swipe-pane">
         <!-- Visual Stepper Progress -->
@@ -151,6 +172,9 @@
 
           <!-- CTA to View Bracket in Main App -->
           <div class="podium-cta-box">
+            <button id="btn-share-results" class="btn btn-gold btn-lg btn-block" style="background: linear-gradient(135deg, #fe3c72, #ff7854); border: none; box-shadow: 0 4px 15px rgba(254, 60, 114, 0.4); margin-bottom: 12px; font-weight: 700;">
+              <i class="fa-solid fa-share-nodes"></i> Share Results
+            </button>
             <button id="btn-go-to-main-bracket" class="btn btn-gold btn-lg btn-block pulse-gold">
               <i class="fa-solid fa-diagram-project"></i> View Full Interactive Bracket
             </button>
