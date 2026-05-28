@@ -1055,18 +1055,63 @@ function revealPodiumChampionship() {
   }
 
   DOM.quickUpsetMatch.innerText = upsetText;
+
+  // Customizations for Share/Viewer Mode
+  if (state.isViewer) {
+    if (DOM.btnRestartSwipe) {
+      DOM.btnRestartSwipe.innerHTML = `<i class="fa-solid fa-play"></i> Make Your Own Prediction`;
+      DOM.btnRestartSwipe.className = "btn btn-gold btn-lg btn-block pulse-gold";
+      DOM.btnRestartSwipe.style.padding = "14px";
+      DOM.btnRestartSwipe.style.fontWeight = "700";
+    }
+    // Hide controls that are irrelevant to read-only viewers
+    if (DOM.btnUndo) DOM.btnUndo.classList.add("hidden");
+    if (DOM.btnReset) DOM.btnReset.classList.add("hidden");
+    if (DOM.btnGoToMainBracket) DOM.btnGoToMainBracket.classList.add("hidden");
+  } else {
+    if (DOM.btnRestartSwipe) {
+      DOM.btnRestartSwipe.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Swipe New Bracket`;
+      DOM.btnRestartSwipe.className = "btn btn-secondary btn-sm";
+      DOM.btnRestartSwipe.style.padding = "";
+      DOM.btnRestartSwipe.style.fontWeight = "";
+    }
+    if (DOM.btnUndo) DOM.btnUndo.classList.remove("hidden");
+    if (DOM.btnReset) DOM.btnReset.classList.remove("hidden");
+    if (DOM.btnGoToMainBracket) DOM.btnGoToMainBracket.classList.remove("hidden");
+  }
 }
 
 // --- 11. EVENT REGISTRATION DOMCONTENTLOADED ---
 window.addEventListener("DOMContentLoaded", () => {
-  // Load state or start new simulation
-  const loaded = loadFromLocalStorage();
-  if (!loaded || !state.userName) {
-    initDefaultState();
-    saveToLocalStorage();
+  // Check if viewing a shared bracket via URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const shareParam = urlParams.get("share");
+  
+  if (shareParam) {
+    try {
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(shareParam))));
+      state.userName = decoded.name;
+      state.knockoutPicks = decoded.picks;
+      state.wizardStep = "championship";
+      state.isViewer = true; // Read-only mode flag
+      recalculateStandings();
+    } catch (err) {
+      console.error("Failed to parse shared prediction data:", err);
+      showToast("Invalid shared link", true);
+    }
   } else {
-    // If user loaded a completed simulator, check active index, or recalculate standings
-    recalculateStandings();
+    // Load state or start new simulation
+    const loaded = loadFromLocalStorage();
+    if (!loaded) {
+      initDefaultState();
+      saveToLocalStorage();
+    } else {
+      // If name is empty, force them to welcome but DO NOT wipe predictions!
+      if (!state.userName) {
+        state.wizardStep = "welcome";
+      }
+      recalculateStandings();
+    }
   }
 
   // Refresh active match cache before rendering first card
@@ -1100,6 +1145,11 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   DOM.btnRestartSwipe.addEventListener("click", () => {
+    if (state.isViewer) {
+      // Go to clean page (strip parameters) to predict their own bracket
+      window.location.href = window.location.pathname;
+      return;
+    }
     initDefaultState();
     saveToLocalStorage();
     refreshActiveMatchCache();
@@ -1158,6 +1208,18 @@ window.addEventListener("DOMContentLoaded", () => {
       const runner = TEAMS_DB[runnerId];
       const third = TEAMS_DB[thirdId];
 
+      // Serialize prediction data to base64 for static serverless URL sharing
+      let shareUrl = "https://itaykt.github.io/world-cup-predictor/swipe.html";
+      try {
+        const serialized = btoa(unescape(encodeURIComponent(JSON.stringify({
+          name: state.userName,
+          picks: state.knockoutPicks
+        }))));
+        shareUrl = `${window.location.origin}${window.location.pathname}?share=${serialized}`;
+      } catch (err) {
+        console.error("Failed to generate share URL:", err);
+      }
+
       let text = `🏆 ${title} World Cup 2026 Prediction 🏆\n\n`;
       if (champ) text += `🥇 CHAMPION: ${champ.flag} ${champ.name.toUpperCase()}\n`;
       if (runner) text += `🥈 RUNNER-UP: ${runner.flag} ${runner.name}\n`;
@@ -1181,12 +1243,12 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `⚡ QUARTER-FINALISTS:\n• ${qfTeams.join('\n• ')}\n\n`;
       }
 
-      text += `Simulated on Swipe Cup ⚽ Predict yours at: https://itaykt.github.io/world-cup-predictor/swipe.html`;
+      text += `Simulated on Swipe Cup ⚽ Predict yours at: ${shareUrl}`;
 
       const shareData = {
         title: `${title} World Cup Prediction`,
         text: text,
-        url: "https://itaykt.github.io/world-cup-predictor/swipe.html"
+        url: shareUrl
       };
 
       if (navigator.share) {
