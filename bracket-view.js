@@ -26,19 +26,44 @@
     return `${t.flag} ${t.name}`;
   }
 
-  function formatScore(score) {
-    if (!score || score.scoreA === "" || score.scoreB === "") return "";
-    return `${score.scoreA}–${score.scoreB}`;
+  function normalizeGroupOutcome(entry) {
+    const TS = typeof globalThis !== "undefined" ? globalThis.TournamentStandings : null;
+    if (TS && TS.normalizeGroupOutcome) {
+      return TS.normalizeGroupOutcome(entry);
+    }
+    if (!entry || entry.scoreA === "" || entry.scoreB === "") return null;
+    if (entry.outcome === "a" || entry.outcome === "b" || entry.outcome === "d") return entry.outcome;
+    const sA = parseInt(entry.scoreA, 10);
+    const sB = parseInt(entry.scoreB, 10);
+    if (sA > sB) return "a";
+    if (sB > sA) return "b";
+    return "d";
+  }
+
+  function formatGroupResult(entry, teamAId, teamBId, teamsDb) {
+    const outcome = normalizeGroupOutcome(entry);
+    if (!outcome) return "";
+    const a = teamsDb[teamAId];
+    const b = teamsDb[teamBId];
+    if (!a || !b) return "";
+    if (outcome === "d") return "Draw";
+    if (outcome === "a") return `${a.flag} ${a.name} win`;
+    return `${b.flag} ${b.name} win`;
+  }
+
+  function formatKnockoutResult(winnerId, teamsDb) {
+    if (!winnerId || !teamsDb[winnerId]) return "";
+    const t = teamsDb[winnerId];
+    return `${t.flag} advances`;
   }
 
   function buildMatchCard(mId, options) {
-    const { teamsDb, knockoutPicks, knockoutScores, resolveMatch } = options;
+    const { teamsDb, knockoutPicks, resolveMatch } = options;
     const resolved = resolveMatch(mId) || {};
     const teamA = resolved.a || resolved.teamA;
     const teamB = resolved.b || resolved.teamB;
     const winnerId = knockoutPicks[mId];
-    const score = knockoutScores[mId];
-    const scoreText = formatScore(score);
+    const scoreText = formatKnockoutResult(winnerId, teamsDb);
 
     const card = document.createElement("div");
     card.className = "bv-match-card glass-panel";
@@ -69,7 +94,7 @@
   }
 
   function buildCenterFinal(options) {
-    const { teamsDb, knockoutPicks, knockoutScores, resolveMatch } = options;
+    const { teamsDb, knockoutPicks, resolveMatch } = options;
     const wrap = document.createElement("div");
     wrap.className = "bv-center-podium";
 
@@ -80,7 +105,7 @@
     const tA = thirdResolved.a || thirdResolved.teamA;
     const tB = thirdResolved.b || thirdResolved.teamB;
     const tWin = knockoutPicks[103];
-    const tScore = formatScore(knockoutScores[103]);
+    const tScore = formatKnockoutResult(tWin, teamsDb);
     thirdBox.appendChild(buildMiniFinalPair(teamsDb, tA, tB, tWin, tScore));
     wrap.appendChild(thirdBox);
 
@@ -91,7 +116,7 @@
     const fA = fResolved.a || fResolved.teamA;
     const fB = fResolved.b || fResolved.teamB;
     const fWin = knockoutPicks[104];
-    const fScore = formatScore(knockoutScores[104]);
+    const fScore = formatKnockoutResult(fWin, teamsDb);
     finalBox.appendChild(buildMiniFinalPair(teamsDb, fA, fB, fWin, fScore, true));
     wrap.appendChild(finalBox);
 
@@ -212,9 +237,9 @@
           .sort((a, b) => a.matchIndex - b.matchIndex)
           .forEach((m) => {
             const key = `${gLetter}_${m.matchIndex}`;
-            const score = groupMatchScores[key];
+            const entry = groupMatchScores[key];
             const li = document.createElement("li");
-            const scoreText = formatScore(score);
+            const scoreText = formatGroupResult(entry, m.teamA, m.teamB, teamsDb);
             li.innerHTML =
               `<span>${teamLabel(teamsDb, m.teamA)} vs ${teamLabel(teamsDb, m.teamB)}</span>` +
               `<strong>${scoreText || "—"}</strong>`;

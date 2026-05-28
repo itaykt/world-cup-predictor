@@ -158,6 +158,11 @@ const DOM = {
 };
 
 // --- INITIALIZE & LOCAL STORAGE PERSISTENCE ---
+const SWIPE_PROGRESS_KEY = "wc_2026_swipe_progress";
+const LEGACY_PROGRESS_KEY = "wc_2026_simulator_save";
+/** Keep in-progress predictions for 14 days, then show welcome again. */
+const SWIPE_PROGRESS_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
 function initDefaultState() {
   state.wizardStep = "welcome";
   state.isViewer = false;
@@ -168,7 +173,8 @@ function initDefaultState() {
   state.thirdPlaceQualifiers = [];
   state.goalscorers = {};
   state.savedBrackets = [];
-  
+  state.actualResults = null;
+
   for (const g of Object.keys(GROUPS_DATA)) {
     state.groupStandings[g] = [...GROUPS_DATA[g]];
   }
@@ -177,10 +183,150 @@ function initDefaultState() {
   if (typeof CelebrationEffects !== "undefined") {
     CelebrationEffects.stopCelebration();
   }
+  clearSwipeProgressStorage();
+}
+
+function clearSwipeProgressStorage() {
+  try {
+    localStorage.removeItem(SWIPE_PROGRESS_KEY);
+    localStorage.removeItem(LEGACY_PROGRESS_KEY);
+  } catch (e) {
+    console.warn("Could not clear swipe progress", e);
+  }
+}
+
+function serializeStateForStorage() {
+  return {
+    wizardStep: state.wizardStep,
+    userName: state.userName,
+    groupMatchScores: state.groupMatchScores,
+    knockoutScores: state.knockoutScores,
+    knockoutPicks: state.knockoutPicks,
+    thirdPlaceQualifiers: state.thirdPlaceQualifiers,
+    groupStandings: state.groupStandings,
+    goalscorers: state.goalscorers,
+    savedBrackets: state.savedBrackets,
+    actualResults: state.actualResults
+  };
+}
+
+function applyStoredState(data) {
+  if (!data || typeof data !== "object") return false;
+
+  state.wizardStep = data.wizardStep || "welcome";
+  state.isViewer = false;
+  state.userName = data.userName || "";
+  state.groupMatchScores = data.groupMatchScores || {};
+  state.knockoutScores = data.knockoutScores || {};
+  state.knockoutPicks = data.knockoutPicks || {};
+  state.thirdPlaceQualifiers = data.thirdPlaceQualifiers || [];
+  state.groupStandings = data.groupStandings || {};
+  state.goalscorers = data.goalscorers || {};
+  state.savedBrackets = data.savedBrackets || [];
+  state.actualResults = data.actualResults || null;
+
+  for (const g of Object.keys(GROUPS_DATA)) {
+    if (!state.groupStandings[g] || state.groupStandings[g].length < 4) {
+      state.groupStandings[g] = [...GROUPS_DATA[g]];
+    }
+  }
+  historyStack.length = 0;
+  return true;
+}
+
+function hasMeaningfulProgress(data) {
+  if (!data) return false;
+  if (data.userName && data.wizardStep && data.wizardStep !== "welcome") return true;
+  const groups = data.groupMatchScores || {};
+  if (
+    Object.keys(groups).some((key) =>
+      TournamentStandings.isEnteredGroupResult(groups[key])
+    )
+  ) {
+    return true;
+  }
+  return Object.keys(data.knockoutPicks || {}).length > 0;
+}
+
+function userRequestedFreshStart() {
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get("restart") ?? params.get("new");
+  return v === "1" || v === "true";
+}
+
+function stripFreshStartParamsFromUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("restart");
+  url.searchParams.delete("new");
+  const qs = url.searchParams.toString();
+  window.history.replaceState(null, "", url.pathname + (qs ? `?${qs}` : "") + url.hash);
+}
+
+function parseProgressEnvelope(raw) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.state && typeof parsed.savedAt === "number") {
+      return { savedAt: parsed.savedAt, state: parsed.state };
+    }
+    if (parsed && (parsed.groupMatchScores || parsed.knockoutPicks || parsed.userName)) {
+      return { savedAt: Date.now(), state: parsed };
+    }
+  } catch (e) {
+    console.warn("Swipe progress parse failed", e);
+  }
+  return null;
+}
+
+function loadSwipeProgressEnvelope() {
+  const keys = [SWIPE_PROGRESS_KEY, LEGACY_PROGRESS_KEY];
+  for (let i = 0; i < keys.length; i++) {
+    const envelope = parseProgressEnvelope(localStorage.getItem(keys[i]));
+    if (envelope) return envelope;
+  }
+  return null;
+}
+
+/** @returns {{ restored: boolean, expired?: boolean }} */
+function tryRestoreSwipeProgress() {
+  const envelope = loadSwipeProgressEnvelope();
+  if (!envelope || !hasMeaningfulProgress(envelope.state)) {
+    return { restored: false };
+  }
+
+  const age = Date.now() - envelope.savedAt;
+  if (age > SWIPE_PROGRESS_TTL_MS) {
+    clearSwipeProgressStorage();
+    return { restored: false, expired: true };
+  }
+
+  if (!applyStoredState(envelope.state)) {
+    return { restored: false };
+  }
+
+  const snapshot = serializeStateForStorage();
+  if (state.wizardStep === "welcome" && hasMeaningfulProgress(snapshot)) {
+    state.wizardStep = "md1";
+  }
+
+  recalculateStandings();
+  refreshActiveMatchCache();
+  return { restored: true };
 }
 
 function saveToLocalStorage() {
-  localStorage.setItem("wc_2026_simulator_save", JSON.stringify(state));
+  if (state.isViewer) return;
+  if (!hasMeaningfulProgress(serializeStateForStorage())) return;
+
+  try {
+    const envelope = {
+      savedAt: Date.now(),
+      state: serializeStateForStorage()
+    };
+    localStorage.setItem(SWIPE_PROGRESS_KEY, JSON.stringify(envelope));
+  } catch (e) {
+    console.warn("Could not save swipe progress", e);
+  }
 }
 
 // --- 3. TOAST NOTIFICATION ---
@@ -208,7 +354,7 @@ function getActiveMatchIndex() {
   for (let i = 0; i < 72; i++) {
     const key = `${GROUP_STAGE_MATCHES[i].group}_${GROUP_STAGE_MATCHES[i].matchIndex}`;
     const score = state.groupMatchScores[key];
-    if (!score || score.scoreA === "" || score.scoreB === "") {
+    if (!TournamentStandings.isEnteredGroupResult(score)) {
       return { stage: "groups", index: i, matchId: i + 1 };
     }
   }
@@ -352,15 +498,15 @@ function applySwipePrediction(direction) {
     const teamB = TEAMS_DB[match.teamB];
     
     if (direction === "win-a") {
-      state.groupMatchScores[key] = { scoreA: "2", scoreB: "1" };
+      state.groupMatchScores[key] = TournamentStandings.groupOutcomeEntry("a");
       showToast(`${teamA.flag} ${teamA.name} Wins!`);
       animateSwipeExit(card, "win-a", () => proceedNextMatch());
     } else if (direction === "win-b") {
-      state.groupMatchScores[key] = { scoreA: "1", scoreB: "2" };
+      state.groupMatchScores[key] = TournamentStandings.groupOutcomeEntry("b");
       showToast(`${teamB.flag} ${teamB.name} Wins!`);
       animateSwipeExit(card, "win-b", () => proceedNextMatch());
     } else if (direction === "draw") {
-      state.groupMatchScores[key] = { scoreA: "1", scoreB: "1" };
+      state.groupMatchScores[key] = TournamentStandings.groupOutcomeEntry("d");
       showToast("🤝 Match Drawn!");
       animateSwipeExit(card, "draw", () => proceedNextMatch());
     }
@@ -371,12 +517,10 @@ function applySwipePrediction(direction) {
     const teamB = TEAMS_DB[matchInfo.b];
     
     if (direction === "win-a") {
-      state.knockoutScores[mId] = { scoreA: "2", scoreB: "1", pWinner: matchInfo.a };
       state.knockoutPicks[mId] = matchInfo.a;
       showToast(`${teamA.flag} ${teamA.name} Wins!`);
       animateSwipeExit(card, "win-a", () => proceedNextMatch());
     } else if (direction === "win-b") {
-      state.knockoutScores[mId] = { scoreA: "1", scoreB: "2", pWinner: matchInfo.b };
       state.knockoutPicks[mId] = matchInfo.b;
       showToast(`${teamB.flag} ${teamB.name} Wins!`);
       animateSwipeExit(card, "win-b", () => proceedNextMatch());
@@ -463,28 +607,12 @@ function simulateStageProbabilistic() {
       const pDraw = 0.22;
       
       const r = Math.random();
-      let scoreA, scoreB;
-      if (r < pA) {
-        // A wins: Score 2-1 (60%), 1-0 (25%), or 2-0 (15%)
-        const randScore = Math.random();
-        if (randScore < 0.60) { scoreA = 2; scoreB = 1; }
-        else if (randScore < 0.85) { scoreA = 1; scoreB = 0; }
-        else { scoreA = 2; scoreB = 0; }
-      } else if (r < pA + pDraw) {
-        // Draw: Score 1-1 (60%), 0-0 (25%), or 2-2 (15%)
-        const randScore = Math.random();
-        if (randScore < 0.60) { scoreA = 1; scoreB = 1; }
-        else if (randScore < 0.85) { scoreA = 0; scoreB = 0; }
-        else { scoreA = 2; scoreB = 2; }
-      } else {
-        // B wins: Score 1-2 (60%), 0-1 (25%), or 0-2 (15%)
-        const randScore = Math.random();
-        if (randScore < 0.60) { scoreA = 1; scoreB = 2; }
-        else if (randScore < 0.85) { scoreA = 0; scoreB = 1; }
-        else { scoreA = 0; scoreB = 2; }
-      }
+      let outcome;
+      if (r < pA) outcome = "a";
+      else if (r < pA + pDraw) outcome = "d";
+      else outcome = "b";
 
-      state.groupMatchScores[key] = { scoreA: String(scoreA), scoreB: String(scoreB) };
+      state.groupMatchScores[key] = TournamentStandings.groupOutcomeEntry(outcome);
       simulatedCount++;
     }
   } else if (cachedActiveMatch.stage === "knockouts") {
@@ -527,22 +655,7 @@ function simulateStageProbabilistic() {
       pA = Math.max(0.15, Math.min(0.75, pA)); // Clamped
       
       const r = Math.random();
-      let scoreA, scoreB, pick;
-      if (r < pA) {
-        // A wins: Score 2-1 (70%) or 1-0 (30%)
-        const randScore = Math.random();
-        scoreA = randScore < 0.70 ? 2 : 1;
-        scoreB = scoreA === 2 ? 1 : 0;
-        pick = teamAId;
-      } else {
-        // B wins: Score 1-2 (70%) or 0-1 (30%)
-        const randScore = Math.random();
-        scoreB = randScore < 0.70 ? 2 : 1;
-        scoreA = scoreB === 2 ? 1 : 0;
-        pick = teamBId;
-      }
-
-      state.knockoutScores[mId] = { scoreA: String(scoreA), scoreB: String(scoreB), pWinner: pick };
+      const pick = r < pA ? teamAId : teamBId;
       state.knockoutPicks[mId] = pick;
       simulatedCount++;
     }
@@ -772,22 +885,20 @@ function collectPredictedMatchups() {
 
   GROUP_STAGE_MATCHES.forEach((m) => {
     const key = `${m.group}_${m.matchIndex}`;
-    const score = state.groupMatchScores[key];
-    if (!score || score.scoreA === "" || score.scoreB === "") return;
+    const outcome = TournamentStandings.normalizeGroupOutcome(state.groupMatchScores[key]);
+    if (!outcome) return;
 
-    const sA = parseInt(score.scoreA, 10);
-    const sB = parseInt(score.scoreB, 10);
     const rA = TEAMS_DB[m.teamA].rank;
     const rB = TEAMS_DB[m.teamB].rank;
     const rankGap = Math.abs(rA - rB);
 
-    if (sA === sB) {
+    if (outcome === "d") {
       matchups.push({ type: "draw", teamA: m.teamA, teamB: m.teamB, rankGap });
       return;
     }
 
-    const winner = sA > sB ? m.teamA : m.teamB;
-    const loser = sA > sB ? m.teamB : m.teamA;
+    const winner = outcome === "a" ? m.teamA : m.teamB;
+    const loser = outcome === "a" ? m.teamB : m.teamA;
     const rWin = TEAMS_DB[winner].rank;
     const rLose = TEAMS_DB[loser].rank;
     const upsetGap = rWin > rLose ? rWin - rLose : 0;
@@ -874,6 +985,8 @@ function revealPodiumChampionship() {
   state.wizardStep = "championship";
   if (!state.isViewer) {
     saveToLocalStorage();
+  } else {
+    clearSwipeProgressStorage();
   }
   updateHeaderTitle();
 
@@ -941,11 +1054,10 @@ function updateSupabaseSaveButton() {
 }
 
 function isLegacyKnockoutOnly() {
-  const hasGroupScores = Object.keys(state.groupMatchScores).some((key) => {
-    const score = state.groupMatchScores[key];
-    return score && score.scoreA !== "" && score.scoreB !== "";
-  });
-  return !hasGroupScores && Object.keys(state.knockoutPicks).length > 0;
+  const hasGroup = Object.keys(state.groupMatchScores).some((key) =>
+    TournamentStandings.isEnteredGroupResult(state.groupMatchScores[key])
+  );
+  return !hasGroup && Object.keys(state.knockoutPicks).length > 0;
 }
 
 function showSwipePane(activePane) {
@@ -1254,10 +1366,17 @@ function bindSharedAndPodiumHandlers() {
         window.location.href = new URL("swipe.html", window.location.href).pathname;
         return;
       }
+      if (
+        !confirm(
+          "Start a new prediction? Your current progress will be cleared from this browser."
+        )
+      ) {
+        return;
+      }
       initDefaultState();
-      saveToLocalStorage();
       refreshActiveMatchCache();
       renderActiveCardDeck();
+      showToast("Ready for a new prediction!");
     });
   }
 
@@ -1327,11 +1446,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Plain swipe.html always opens the welcome screen (no auto-resume from localStorage).
-  initDefaultState();
-  saveToLocalStorage();
+  if (userRequestedFreshStart()) {
+    initDefaultState();
+    stripFreshStartParamsFromUrl();
+  } else {
+    const resume = tryRestoreSwipeProgress();
+    if (resume.restored) {
+      if (DOM.inputUserName && state.userName) {
+        DOM.inputUserName.value = state.userName;
+      }
+    } else {
+      if (resume.expired) {
+        showToast("Your saved session expired — start a new prediction.");
+      }
+      initDefaultState();
+    }
+  }
 
-  // Refresh active match cache before rendering first card
   refreshActiveMatchCache();
 
   // Render Card
@@ -1354,7 +1485,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   DOM.btnReset.addEventListener("click", () => {
     if (confirm("Are you sure you want to reset your swipe predictor? All predictions will be wiped.")) {
       initDefaultState();
-      saveToLocalStorage();
       refreshActiveMatchCache();
       renderActiveCardDeck();
       showToast("Predictor fully reset!");

@@ -1,5 +1,6 @@
 /**
- * Group-stage standings, tiebreakers, and third-place wildcard ranking.
+ * Group-stage standings and third-place wildcard ranking (Swipe Cup: W/D/L only).
+ * Tiebreaker when points are equal: better FIFA world ranking (lower rank number).
  */
 (function (root, factory) {
   const TournamentStandings = factory();
@@ -14,8 +15,30 @@
       : globalThis.TournamentData
   );
 
-  function isEnteredScore(score) {
-    return Boolean(score && score.scoreA !== "" && score.scoreB !== "");
+  /** @returns {'a'|'b'|'d'|null} */
+  function normalizeGroupOutcome(entry) {
+    if (!entry || typeof entry !== "object") return null;
+    if (entry.outcome === "a" || entry.outcome === "b" || entry.outcome === "d") {
+      return entry.outcome;
+    }
+    if (entry.scoreA === "" || entry.scoreB === "" || entry.scoreA == null || entry.scoreB == null) {
+      return null;
+    }
+    const sA = parseInt(entry.scoreA, 10);
+    const sB = parseInt(entry.scoreB, 10);
+    if (Number.isNaN(sA) || Number.isNaN(sB)) return null;
+    if (sA > sB) return "a";
+    if (sB > sA) return "b";
+    return "d";
+  }
+
+  function isEnteredGroupResult(entry) {
+    return normalizeGroupOutcome(entry) !== null;
+  }
+
+  /** @deprecated alias */
+  function isEnteredScore(entry) {
+    return isEnteredGroupResult(entry);
   }
 
   function createEmptyStats(teamId, groupLetter) {
@@ -26,31 +49,18 @@
       w: 0,
       d: 0,
       l: 0,
-      gd: 0,
-      gf: 0,
-      ga: 0,
       pts: 0
     };
   }
 
-  function applyMatchResult(stats, teamAId, teamBId, scoreA, scoreB) {
-    const sA = parseInt(scoreA, 10);
-    const sB = parseInt(scoreB, 10);
-
+  function applyMatchOutcome(stats, teamAId, teamBId, outcome) {
     stats[teamAId].p++;
     stats[teamBId].p++;
-    stats[teamAId].gf += sA;
-    stats[teamBId].gf += sB;
-    stats[teamAId].ga += sB;
-    stats[teamBId].ga += sA;
-    stats[teamAId].gd += sA - sB;
-    stats[teamBId].gd += sB - sA;
-
-    if (sA > sB) {
+    if (outcome === "a") {
       stats[teamAId].w++;
       stats[teamAId].pts += 3;
       stats[teamBId].l++;
-    } else if (sB > sA) {
+    } else if (outcome === "b") {
       stats[teamBId].w++;
       stats[teamBId].pts += 3;
       stats[teamAId].l++;
@@ -62,10 +72,9 @@
     }
   }
 
+  /** Points, then FIFA rank (lower number = better). */
   function compareStatsRows(a, b) {
     if (b.pts !== a.pts) return b.pts - a.pts;
-    if (b.gd !== a.gd) return b.gd - a.gd;
-    if (b.gf !== a.gf) return b.gf - a.gf;
     return TEAMS_DB[a.teamId].rank - TEAMS_DB[b.teamId].rank;
   }
 
@@ -77,28 +86,19 @@
       if (m.teamA !== teamId && m.teamB !== teamId) return;
 
       const key = `${groupLetter}_${m.matchIndex}`;
-      const score = groupMatchScores[key];
-      if (!isEnteredScore(score)) return;
+      const outcome = normalizeGroupOutcome(groupMatchScores[key]);
+      if (!outcome) return;
 
-      const sA = parseInt(score.scoreA, 10);
-      const sB = parseInt(score.scoreB, 10);
       const isTeamA = m.teamA === teamId;
-      const myScore = isTeamA ? sA : sB;
-      const oppScore = isTeamA ? sB : sA;
-
       stats.p++;
-      stats.gf += myScore;
-      stats.ga += oppScore;
-      stats.gd += myScore - oppScore;
-
-      if (myScore > oppScore) {
-        stats.w++;
-        stats.pts += 3;
-      } else if (oppScore > myScore) {
-        stats.l++;
-      } else {
+      if (outcome === "d") {
         stats.d++;
         stats.pts += 1;
+      } else if ((outcome === "a" && isTeamA) || (outcome === "b" && !isTeamA)) {
+        stats.w++;
+        stats.pts += 3;
+      } else {
+        stats.l++;
       }
     });
 
@@ -115,9 +115,9 @@
     GROUP_STAGE_MATCHES_FLAT.forEach((m) => {
       if (m.group !== groupLetter) return;
       const key = `${groupLetter}_${m.matchIndex}`;
-      const score = groupMatchScores[key];
-      if (!isEnteredScore(score)) return;
-      applyMatchResult(stats, m.teamA, m.teamB, score.scoreA, score.scoreB);
+      const outcome = normalizeGroupOutcome(groupMatchScores[key]);
+      if (!outcome) return;
+      applyMatchOutcome(stats, m.teamA, m.teamB, outcome);
     });
 
     return Object.values(stats)
@@ -155,11 +155,18 @@
 
   function getTeamSummaryStats(groupLetter, teamId, groupMatchScores) {
     const full = computeTeamStats(groupLetter, teamId, groupMatchScores);
-    return { gd: full.gd, pts: full.pts };
+    return { pts: full.pts };
+  }
+
+  function groupOutcomeEntry(outcome) {
+    return { outcome };
   }
 
   return {
+    normalizeGroupOutcome,
+    isEnteredGroupResult,
     isEnteredScore,
+    groupOutcomeEntry,
     computeTeamStats,
     buildGroupTable,
     calculateThirdPlacedList,

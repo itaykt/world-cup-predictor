@@ -10,7 +10,7 @@
     (function () {
       var url = new URL("swipe.html", window.location.href);
       var params = new URLSearchParams(window.location.search);
-      ["bracket", "share", "new", "start", "view"].forEach(function (key) {
+      ["bracket", "share", "new", "start", "restart", "view"].forEach(function (key) {
         var val = params.get(key);
         if (val != null && val !== "") url.searchParams.set(key, val);
       });

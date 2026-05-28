@@ -33,7 +33,7 @@ export default [
     }
   },
   {
-    files: ["share-utils.js", "data.js", "tournament-standings.js", "supabase-utils.js", "bracket-view.js"],
+    files: ["share-utils.js", "data.js", "tournament-standings.js", "supabase-utils.js", "bracket-view.js", "celebration-effects.js"],
     languageOptions: {
       globals: {
         ...globals.browser,

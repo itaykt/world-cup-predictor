@@ -4,7 +4,15 @@ import TournamentStandings from "../tournament-standings.js";
 
 const { TEAMS_DB } = TournamentData;
 
-function scoresForGroup(gLetter, results) {
+function outcomesForGroup(gLetter, results) {
+  const entries = {};
+  results.forEach(([matchIndex, outcome]) => {
+    entries[`${gLetter}_${matchIndex}`] = TournamentStandings.groupOutcomeEntry(outcome);
+  });
+  return entries;
+}
+
+function legacyScoresForGroup(gLetter, results) {
   const scores = {};
   results.forEach(([matchIndex, scoreA, scoreB]) => {
     scores[`${gLetter}_${matchIndex}`] = { scoreA: String(scoreA), scoreB: String(scoreB) };
@@ -13,50 +21,59 @@ function scoresForGroup(gLetter, results) {
 }
 
 describe("TournamentStandings.recalculate", () => {
-  it("ranks teams by points then goal difference then goals for", () => {
-    const groupMatchScores = scoresForGroup("A", [
-      [0, 3, 0],
-      [1, 0, 0],
-      [2, 2, 0],
-      [3, 0, 2],
-      [4, 0, 3],
-      [5, 0, 1]
+  it("ranks teams by points then FIFA rank (no goal tiebreakers)", () => {
+    const groupMatchScores = outcomesForGroup("A", [
+      [0, "a"],
+      [1, "a"],
+      [2, "a"],
+      [3, "b"],
+      [4, "b"],
+      [5, "b"]
     ]);
 
     const { groupStandings } = TournamentStandings.recalculate(groupMatchScores);
     expect(groupStandings.A[0]).toBe("mex");
-    expect(groupStandings.A[1]).toBe("cze");
-    expect(groupStandings.A[2]).toBe("kor");
+    expect(groupStandings.A[1]).toBe("kor");
+    expect(groupStandings.A[2]).toBe("cze");
     expect(groupStandings.A[3]).toBe("rsa");
   });
 
-  it("uses FIFA rank as final tiebreaker when pts/gd/gf are equal", () => {
-    const groupMatchScores = {
-      A_0: { scoreA: "1", scoreB: "1" },
-      A_1: { scoreA: "1", scoreB: "1" },
-      A_2: { scoreA: "1", scoreB: "1" },
-      A_3: { scoreA: "1", scoreB: "1" },
-      A_4: { scoreA: "1", scoreB: "1" },
-      A_5: { scoreA: "1", scoreB: "1" }
-    };
+  it("uses FIFA rank when points are tied", () => {
+    const groupMatchScores = outcomesForGroup("A", [
+      [0, "d"],
+      [1, "d"],
+      [2, "d"],
+      [3, "d"],
+      [4, "d"],
+      [5, "d"]
+    ]);
 
     const { groupStandings } = TournamentStandings.recalculate(groupMatchScores);
     expect(groupStandings.A[0]).toBe("mex");
     expect(TEAMS_DB.mex.rank).toBeLessThan(TEAMS_DB.rsa.rank);
   });
 
+  it("normalizes legacy score objects into outcomes", () => {
+    const groupMatchScores = legacyScoresForGroup("A", [
+      [0, 2, 1],
+      [1, 1, 2],
+      [2, 1, 1],
+      [3, 2, 0],
+      [4, 0, 2],
+      [5, 0, 1]
+    ]);
+    const { groupStandings } = TournamentStandings.recalculate(groupMatchScores);
+    expect(groupStandings.A).toHaveLength(4);
+    expect(TournamentStandings.isEnteredGroupResult(groupMatchScores.A_0)).toBe(true);
+  });
+
   it("selects top eight third-place teams for wildcards", () => {
     const groupMatchScores = {};
     Object.keys(TournamentData.GROUPS_DATA).forEach((g) => {
-      TournamentData.GROUPS_DATA[g].forEach((teamId, idx) => {
-        for (let matchIndex = 0; matchIndex < 6; matchIndex++) {
-          const key = `${g}_${matchIndex}`;
-          const isWin = idx === 0;
-          groupMatchScores[key] = isWin
-            ? { scoreA: "2", scoreB: "0" }
-            : { scoreA: "0", scoreB: "2" };
-        }
-      });
+      for (let matchIndex = 0; matchIndex < 6; matchIndex++) {
+        const key = `${g}_${matchIndex}`;
+        groupMatchScores[key] = TournamentStandings.groupOutcomeEntry(matchIndex < 2 ? "a" : "b");
+      }
     });
 
     const { thirdPlaceQualifiers } = TournamentStandings.recalculate(groupMatchScores);
@@ -66,26 +83,26 @@ describe("TournamentStandings.recalculate", () => {
 });
 
 describe("TournamentStandings.calculateThirdPlacedList", () => {
-  it("orders third-place teams independently of full table stats", () => {
-    const groupMatchScores = scoresForGroup("A", [
-      [0, 3, 0],
-      [1, 3, 0],
-      [2, 0, 3],
-      [3, 3, 0],
-      [4, 0, 3],
-      [5, 0, 3]
+  it("orders third-place teams by points then FIFA rank", () => {
+    const groupMatchScores = outcomesForGroup("A", [
+      [0, "a"],
+      [1, "a"],
+      [2, "b"],
+      [3, "a"],
+      [4, "b"],
+      [5, "b"]
     ]);
-    const groupStandings = { A: ["mex", "kor", "rsa", "cze"] };
-
+    const { groupStandings } = TournamentStandings.recalculate(groupMatchScores);
     const thirds = TournamentStandings.calculateThirdPlacedList(groupMatchScores, groupStandings);
-    expect(thirds[0].teamId).toBe("rsa");
+    expect(thirds[0].teamId).toBe(groupStandings.A[2]);
     expect(thirds[0].pts).toBe(3);
   });
 });
 
-describe("TournamentStandings.isEnteredScore", () => {
-  it("treats empty strings as not entered", () => {
-    expect(TournamentStandings.isEnteredScore({ scoreA: "", scoreB: "1" })).toBe(false);
-    expect(TournamentStandings.isEnteredScore({ scoreA: "1", scoreB: "0" })).toBe(true);
+describe("TournamentStandings.isEnteredGroupResult", () => {
+  it("accepts outcome objects and rejects empty legacy scores", () => {
+    expect(TournamentStandings.isEnteredGroupResult({ outcome: "a" })).toBe(true);
+    expect(TournamentStandings.isEnteredGroupResult({ scoreA: "", scoreB: "1" })).toBe(false);
+    expect(TournamentStandings.isEnteredGroupResult({ scoreA: "1", scoreB: "0" })).toBe(true);
   });
 });
