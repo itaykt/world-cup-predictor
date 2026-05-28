@@ -371,6 +371,28 @@ body.deck-active .swipe-card {
   gap: 10px;
 }
 
+body.deck-active .card-header-stage {
+  flex-shrink: 0;
+}
+
+body.deck-active .card-vs-body {
+  flex: 1 1 auto;
+  align-content: center;
+  margin: 0;
+  width: 100%;
+}
+
+body.deck-active .card-team-panel {
+  justify-self: center;
+  max-width: 118px;
+}
+
+body.deck-active .card-team-stars {
+  margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
+}
+
 #pane-swipe-welcome {
   display: flex;
   flex-direction: column;
@@ -1500,8 +1522,7 @@ kbd {
     justify-content: flex-start;
     gap: 8px;
     padding: 10px 10px 12px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
 
   .swipe-card {
@@ -1517,10 +1538,19 @@ kbd {
     font-size: 0.78rem;
   }
 
-  .card-vs-body {
-    margin: 4px 0 !important;
-    gap: 4px;
-    flex-shrink: 0;
+  body.deck-active .card-vs-body {
+    flex: 1 1 auto;
+    margin: 0 !important;
+    gap: 6px;
+    align-content: center;
+  }
+
+  body.deck-active .card-team-panel {
+    max-width: 108px;
+  }
+
+  body.deck-active .card-team-stars {
+    margin-top: auto;
   }
 
   .card-team-flag {
@@ -1540,11 +1570,10 @@ kbd {
     height: 28px;
   }
 
-  .card-team-stars {
+  body.deck-active .card-team-stars {
     padding: 6px 8px;
     font-size: 0.55rem;
     line-height: 1.35;
-    flex-shrink: 0;
   }
 
   .global-swipe-indicators {
@@ -1599,7 +1628,7 @@ kbd {
   }
 
   body.deck-active .card-vs-body {
-    margin: 2px 0 !important;
+    gap: 4px;
   }
 
   body.deck-active .card-team-stars {
