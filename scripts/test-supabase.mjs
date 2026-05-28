@@ -10,6 +10,9 @@
  *   npm run test:supabase -- --submit mynick 1234
  */
 import SupabaseBracket from "../supabase-utils.js";
+import * as supabase from "@supabase/supabase-js";
+globalThis.supabase = supabase;
+globalThis.window = { location: { href: "http://localhost/" } };
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_ANON_KEY;
@@ -48,6 +51,7 @@ const teamsDb = {
 async function main() {
   if (doSubmit) {
     console.log(`Submitting bracket as "${nickname}"…`);
+    console.log("nick:", JSON.stringify(nickname), "pin:", JSON.stringify(pin));
     const sub = await SupabaseBracket.submitBracket(nickname, pin, samplePayload, teamsDb);
     if (!sub.ok) {
       console.error("submitBracket failed:", sub.error);
