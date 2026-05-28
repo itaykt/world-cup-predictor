@@ -10,8 +10,9 @@ Live on GitHub Pages: predictions can be shared via URL-encoded bracket data, or
 
 | File | Description |
 |------|-------------|
-| [`swipe.html`](swipe.html) | **Main app** — welcome screen, swipe predictor, podium, bracket viewer |
-| [`index.html`](index.html) | Redirects to `swipe.html` (root URL works the same) |
+| [`swipe.html`](swipe.html) | **Only public entry** — welcome, swipe predictor, podium, bracket viewer |
+
+**Share this URL:** `https://itaykt.github.io/world-cup-predictor/swipe.html` — the site root (`/world-cup-predictor/`) is intentionally not a page.
 
 ## Development
 
@@ -32,7 +33,7 @@ Shared modules (loaded before the apps in HTML):
 3. Copy **Project URL** and **anon public** key into `supabase-utils.js` (replace `YOUR_PROJECT` placeholders).
 4. Deploy — users can save brackets from the championship screen or Swipe Cup podium.
 
-Saved brackets load read-only on `swipe.html?bracket=nickname`. Hash sharing uses `swipe.html#share=…`. The site root redirects to Swipe.
+Saved brackets load read-only on `swipe.html?bracket=nickname`. Hash sharing uses `swipe.html#share=…`.
 
 ```bash
 npm install
