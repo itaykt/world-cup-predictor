@@ -782,7 +782,7 @@ function simulateStageProbabilistic() {
   refreshActiveMatchCache();
   renderActiveCardDeck();
 
-  showToast(`⚡ ${stageLabel}: ${simulatedCount} matches simulated (ELO-based)!`);
+  showToast(`⚡ ${stageLabel}: ${simulatedCount} matches simulated!`);
 }
 
 // --- 7.6. PERSONALIZATION HELPERS ---

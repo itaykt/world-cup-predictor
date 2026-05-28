@@ -98,14 +98,12 @@
                 <span class="intro-arrow">→</span>
                 <span class="intro-label">Team B wins</span>
               </div>
-              <div class="intro-card-mock">
-                <span class="mock-flag">⚽</span>
-                <span class="mock-vs">vs</span>
-                <span class="mock-flag">⚽</span>
+              <div class="intro-card-mock" aria-hidden="true">
+                <span class="mock-swipe-label">Swipe</span>
               </div>
             </div>
             <p class="swipe-intro-note" id="swipe-intro-knockout-note">Knockout rounds: left or right only — no draws.</p>
-            <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-block">Kick off</button>
+            <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-lg btn-block btn-intro-kickoff">Kick off</button>
           </div>
         </div>
 
@@ -113,7 +111,7 @@
         <div class="stepper-progress-container glass-panel">
           <div class="stepper-meta" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <span class="stepper-stage-label" id="stepper-stage-title" style="flex: 1; text-align: left;">GROUP STAGE</span>
-            <button id="btn-simulate-stage" class="btn btn-secondary btn-sm" style="font-size: 0.62rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; color: var(--gold-300); border-color: rgba(254, 60, 114, 0.25); display: flex; align-items: center; gap: 4px; margin: 0 10px;" title="Fast-forward and simulate the rest of this stage based on FIFA Ranks ELO probabilities">
+            <button id="btn-simulate-stage" class="btn btn-secondary btn-sm" style="font-size: 0.62rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; color: var(--gold-300); border-color: rgba(254, 60, 114, 0.25); display: flex; align-items: center; gap: 4px; margin: 0 10px;" title="Fast-forward and simulate the rest of this stage">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Sim Stage
             </button>
             <span class="stepper-count-label" id="stepper-match-progress" style="flex: 1; text-align: right;">Match 1 of 72</span>
@@ -151,7 +149,7 @@
             </button>
             
             <button id="btn-choice-up" class="btn-choice btn-draw btn-choice-subtle" title="Draw (up arrow)" aria-label="Draw">
-              <span class="btn-choice-icon">=</span>
+              <span class="btn-choice-icon">x</span>
             </button>
             
             <button id="btn-choice-right" class="btn-choice btn-win-b btn-choice-subtle" title="Team B wins (right arrow)" aria-label="Team B wins">
