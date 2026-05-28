@@ -1212,36 +1212,6 @@ kbd {
   margin-top: 4px;
 }
 
-.bracket-dna-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bracket-dna-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.78rem;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.bracket-dna-list li:last-child {
-  border-bottom: none;
-}
-
-.dna-label {
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.dna-value {
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
 .path-to-glory-route {
   font-size: 0.75rem;
   line-height: 1.55;

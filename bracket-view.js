@@ -54,7 +54,7 @@
   function formatKnockoutResult(winnerId, teamsDb) {
     if (!winnerId || !teamsDb[winnerId]) return "";
     const t = teamsDb[winnerId];
-    return `${t.flag} advances`;
+    return `${t.flag} Advances`;
   }
 
   function buildMatchCard(mId, options) {

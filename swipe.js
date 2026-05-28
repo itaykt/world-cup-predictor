@@ -176,7 +176,6 @@ const DOM = {
 
   podiumChaosPanel: document.getElementById("podium-chaos-panel"),
   podiumChaosValue: document.getElementById("podium-chaos-value"),
-  bracketDnaList: document.getElementById("bracket-dna-list"),
   pathToGloryRoute: document.getElementById("path-to-glory-route")
 };
 
@@ -1101,45 +1100,6 @@ function calculateChaosScore() {
   return Math.round((upsets / results.length) * 100);
 }
 
-function tierFromPercent(pct, lowLabel, midLabel, highLabel) {
-  if (pct < 34) return lowLabel;
-  if (pct < 67) return midLabel;
-  return highLabel;
-}
-
-function calculateBracketDNA() {
-  const matchups = collectPredictedMatchups();
-  const results = matchups.filter((m) => m.type === "result");
-  const draws = matchups.filter((m) => m.type === "draw").length;
-  const groupPlayed = GROUP_STAGE_MATCHES.filter((m) => {
-    const key = `${m.group}_${m.matchIndex}`;
-    return TournamentStandings.isEnteredGroupResult(state.groupMatchScores[key]);
-  }).length;
-
-  let upsetCount = 0;
-  let favoriteWins = 0;
-  results.forEach((m) => {
-    if (m.upsetGap > 0) upsetCount += 1;
-    const rWin = TEAMS_DB[m.winner].rank;
-    const rLose = TEAMS_DB[m.loser].rank;
-    if (rWin < rLose) favoriteWins += 1;
-  });
-
-  const upsetPct = results.length ? (upsetCount / results.length) * 100 : 0;
-  const favPct = results.length ? (favoriteWins / results.length) * 100 : 50;
-  const drawPct = groupPlayed ? (draws / groupPlayed) * 100 : 0;
-
-  const champId = state.knockoutPicks[104];
-  const champRank = champId && TEAMS_DB[champId] ? TEAMS_DB[champId].rank : 50;
-
-  return {
-    upsetLevel: tierFromPercent(upsetPct, "Low", "Medium", "High"),
-    favoriteBias: tierFromPercent(favPct, "Low", "Medium", "High"),
-    drawTolerance: tierFromPercent(drawPct, "Low", "Medium", "High"),
-    championConfidence: champRank <= 10 ? "Safe" : champRank <= 25 ? "Balanced" : "Brave"
-  };
-}
-
 function getChampionGroupLetter(champId) {
   for (const g of Object.keys(state.groupStandings)) {
     if (state.groupStandings[g] && state.groupStandings[g].includes(champId)) {
@@ -1192,22 +1152,6 @@ function formatChampionPathText(champId) {
   return `${champ.name}'s route:\n${parts.join(" → ")}`;
 }
 
-function renderBracketDnaList(dna) {
-  if (!DOM.bracketDnaList) return;
-  const rows = [
-    ["Upset Level", dna.upsetLevel],
-    ["Favorite Bias", dna.favoriteBias],
-    ["Draw Tolerance", dna.drawTolerance],
-    ["Champion Confidence", dna.championConfidence]
-  ];
-  DOM.bracketDnaList.innerHTML = rows
-    .map(
-      ([label, value]) =>
-        `<li><span class="dna-label">${label}</span><span class="dna-value">${value}</span></li>`
-    )
-    .join("");
-}
-
 function updatePodiumSignaturePanels(champId) {
   const chaos = calculateChaosScore();
   if (DOM.podiumChaosValue) {
@@ -1216,8 +1160,6 @@ function updatePodiumSignaturePanels(champId) {
   if (DOM.podiumChaosPanel) {
     DOM.podiumChaosPanel.classList.toggle("hidden", state.isViewer);
   }
-
-  renderBracketDnaList(calculateBracketDNA());
 
   if (DOM.pathToGloryRoute) {
     const pathText = formatChampionPathText(champId);
