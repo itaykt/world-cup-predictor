@@ -10,6 +10,7 @@ const GROUP_STAGE_MATCHES = TournamentData.GROUP_STAGE_MATCHES_FLAT;
 const APP_TITLE_DEFAULT = "Your 2026 World Cup, One Match at a Time";
 /** Set when user taps "Start My World Cup"; cleared when intro is dismissed. */
 const SWIPE_INTRO_PENDING_KEY = "wc_swipe_intro_pending";
+let swipeIntroPending = false;
 const LOADING_LINES = [
   "Warming up the teams…",
   "Drawing the groups…",
@@ -189,6 +190,7 @@ function setDeckActiveMode(active) {
 }
 
 function queueSwipeIntro() {
+  swipeIntroPending = true;
   try {
     sessionStorage.setItem(SWIPE_INTRO_PENDING_KEY, "1");
     localStorage.removeItem("wc_swipe_intro_seen_v1");
@@ -198,6 +200,7 @@ function queueSwipeIntro() {
 }
 
 function clearSwipeIntroPending() {
+  swipeIntroPending = false;
   try {
     sessionStorage.removeItem(SWIPE_INTRO_PENDING_KEY);
     localStorage.removeItem("wc_swipe_intro_seen_v1");
@@ -207,6 +210,7 @@ function clearSwipeIntroPending() {
 }
 
 function shouldShowSwipeIntro() {
+  if (swipeIntroPending) return true;
   try {
     return sessionStorage.getItem(SWIPE_INTRO_PENDING_KEY) === "1";
   } catch (_e) {
@@ -214,11 +218,16 @@ function shouldShowSwipeIntro() {
   }
 }
 
-function showSwipeIntroIfNeeded() {
-  if (!DOM.swipeIntroOverlay || !shouldShowSwipeIntro()) return;
+function showSwipeIntro(force = false) {
+  if (!DOM.swipeIntroOverlay) return;
+  if (!force && !shouldShowSwipeIntro()) return;
   DOM.swipeIntroOverlay.classList.remove("hidden");
   DOM.swipeIntroOverlay.setAttribute("aria-hidden", "false");
   updateSwipeIntroForStage();
+}
+
+function showSwipeIntroIfNeeded() {
+  showSwipeIntro(false);
 }
 
 function hideSwipeIntro() {
@@ -1637,6 +1646,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     SupabaseBracket.initSupabase();
   }
 
+  if (shouldShowSwipeIntro()) {
+    swipeIntroPending = true;
+  }
+
   bindSharedAndPodiumHandlers();
   bindSwipeIntroHandlers();
   if (DOM.deckLoadingMsg) {
@@ -1715,6 +1728,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       saveToLocalStorage();
       updateHeaderTitle();
       renderActiveCardDeck();
+      showSwipeIntro(true);
       showToast(`Kickoff, ${nameVal}!`);
     });
   }

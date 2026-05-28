@@ -11,7 +11,7 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="swipe.css?v=5.2">
+  <link rel="stylesheet" href="swipe.css?v=5.3">
 </head>
 <body>
   <!-- Animated stadium mesh background (decorative) -->
@@ -80,31 +80,6 @@
 
       <!-- PANE 1: CARD DECK SIMULATION VIEW -->
       <section id="pane-swipe-deck" class="swipe-pane">
-        <!-- One-time swipe how-to -->
-        <div id="swipe-intro-overlay" class="swipe-intro-overlay hidden" role="dialog" aria-labelledby="swipe-intro-title">
-          <div class="swipe-intro-card glass-panel">
-            <h3 id="swipe-intro-title">How to pick a result</h3>
-            <p class="swipe-intro-lead">Swipe the match card — no buttons required.</p>
-            <div class="swipe-intro-diagram" aria-hidden="true">
-              <div class="intro-gesture intro-left">
-                <span class="intro-arrow">←</span>
-                <span class="intro-label">Team A wins</span>
-              </div>
-              <div class="intro-gesture intro-up" id="swipe-intro-draw">
-                <span class="intro-arrow">↑</span>
-                <span class="intro-label">Ends level</span>
-              </div>
-              <div class="intro-gesture intro-right">
-                <span class="intro-arrow">→</span>
-                <span class="intro-label">Team B wins</span>
-              </div>
-              <div class="intro-card-mock" aria-hidden="true"></div>
-            </div>
-            <p class="swipe-intro-note" id="swipe-intro-knockout-note">Knockout rounds: left or right only — no draws.</p>
-            <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-lg btn-block btn-intro-kickoff">Kick off</button>
-          </div>
-        </div>
-
         <!-- Visual Stepper Progress -->
         <div class="stepper-progress-container glass-panel">
           <div class="stepper-meta" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -270,6 +245,31 @@
     </footer>
   </div>
 
+  <!-- Swipe how-to (on body so it is never clipped by hidden panes) -->
+  <div id="swipe-intro-overlay" class="swipe-intro-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="swipe-intro-title" aria-hidden="true">
+    <div class="swipe-intro-card glass-panel">
+      <h3 id="swipe-intro-title">How to pick a result</h3>
+      <p class="swipe-intro-lead">Swipe the match card.</p>
+      <div class="swipe-intro-diagram" aria-hidden="true">
+        <div class="intro-gesture intro-left">
+          <span class="intro-arrow">←</span>
+          <span class="intro-label">Team A wins</span>
+        </div>
+        <div class="intro-gesture intro-up" id="swipe-intro-draw">
+          <span class="intro-arrow">↑</span>
+          <span class="intro-label">Ends level</span>
+        </div>
+        <div class="intro-gesture intro-right">
+          <span class="intro-arrow">→</span>
+          <span class="intro-label">Team B wins</span>
+        </div>
+        <div class="intro-card-mock" aria-hidden="true"></div>
+      </div>
+      <p class="swipe-intro-note" id="swipe-intro-knockout-note">Knockout rounds: left or right only — no draws.</p>
+      <button type="button" id="btn-dismiss-swipe-intro" class="btn btn-gold btn-lg btn-block btn-intro-kickoff">Kick off</button>
+    </div>
+  </div>
+
   <!-- Save your prediction (Supabase) -->
   <div class="modal-overlay hidden" id="save-share-modal">
     <div class="modal-card glass-panel">
@@ -301,6 +301,6 @@
   <script src="supabase-utils.js"></script>
   <script src="bracket-view.js"></script>
   <script src="celebration-effects.js"></script>
-  <script src="swipe.js?v=5.2"></script>
+  <script src="swipe.js?v=5.3"></script>
 </body>
 </html>
