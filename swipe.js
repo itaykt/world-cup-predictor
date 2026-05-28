@@ -152,7 +152,6 @@ const DOM = {
   
   btnShareResults: document.getElementById("btn-share-results"),
   btnViewBracket: document.getElementById("btn-view-bracket"),
-  btnSaveLeaderboard: document.getElementById("btn-save-leaderboard"),
   btnBackFromBracket: document.getElementById("btn-back-from-bracket"),
   bracketViewTitle: document.getElementById("bracket-view-title"),
   bracketViewGroups: document.getElementById("bracket-view-groups"),
@@ -164,13 +163,6 @@ const DOM = {
   leaderboardUnconfigured: document.getElementById("leaderboard-unconfigured"),
   btnRefreshLeaderboard: document.getElementById("btn-refresh-leaderboard"),
   btnRestartSwipe: document.getElementById("btn-restart-swipe"),
-
-  saveShareModal: document.getElementById("save-share-modal"),
-  btnCloseSaveShare: document.getElementById("btn-close-save-share"),
-  inputSaveNickname: document.getElementById("input-save-nickname"),
-  inputSavePin: document.getElementById("input-save-pin"),
-  saveShareError: document.getElementById("save-share-error"),
-  btnSubmitSaveShare: document.getElementById("btn-submit-save-share"),
 
   swipeIntroOverlay: document.getElementById("swipe-intro-overlay"),
   btnDismissSwipeIntro: document.getElementById("btn-dismiss-swipe-intro"),
@@ -267,6 +259,8 @@ const SWIPE_PROGRESS_KEY = "wc_2026_swipe_progress";
 const LEGACY_PROGRESS_KEY = "wc_2026_simulator_save";
 /** Tab session flag — refresh keeps this; new tab/window does not (welcome screen). */
 const SWIPE_SESSION_KEY = "wc_swipe_session_active";
+const SWIPE_AUTO_NICK_KEY = "wc_swipe_auto_nick";
+const SWIPE_AUTO_SAVED_KEY = "wc_swipe_auto_saved";
 /** Keep in-progress predictions for 14 days, then show welcome again. */
 const SWIPE_PROGRESS_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -291,6 +285,83 @@ function clearSwipeSession() {
     sessionStorage.removeItem(SWIPE_SESSION_KEY);
   } catch (e) {
     console.warn("Could not clear swipe session", e);
+  }
+}
+
+function clearAutoSaveSession() {
+  try {
+    sessionStorage.removeItem(SWIPE_AUTO_NICK_KEY);
+    sessionStorage.removeItem(SWIPE_AUTO_SAVED_KEY);
+  } catch (e) {
+    console.warn("Could not clear auto-save session", e);
+  }
+}
+
+function buildAutoNickname(displayName) {
+  let base =
+    typeof SupabaseBracket !== "undefined"
+      ? SupabaseBracket.normalizeNickname(displayName)
+      : String(displayName || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "_");
+  if (base.length < 2) base = "fan";
+  base = base.slice(0, 12);
+  const suffix = Math.random().toString(36).slice(2, 6);
+  return `${base}_${suffix}`.slice(0, 20);
+}
+
+function getOrCreateAutoNickname() {
+  try {
+    const existing = sessionStorage.getItem(SWIPE_AUTO_NICK_KEY);
+    if (existing && typeof SupabaseBracket !== "undefined" && SupabaseBracket.isValidNickname(existing)) {
+      return existing;
+    }
+    const nick = buildAutoNickname(state.userName);
+    sessionStorage.setItem(SWIPE_AUTO_NICK_KEY, nick);
+    return nick;
+  } catch (_e) {
+    return buildAutoNickname(state.userName);
+  }
+}
+
+let autoSavePredictionInFlight = false;
+
+async function autoSavePredictionToLeaderboard() {
+  if (state.isViewer) return;
+  if (typeof SupabaseBracket === "undefined" || !SupabaseBracket.isConfigured()) return;
+  if (!state.knockoutPicks[104]) return;
+
+  try {
+    if (sessionStorage.getItem(SWIPE_AUTO_SAVED_KEY) === "1") return;
+  } catch (_e) {
+    /* ignore */
+  }
+
+  if (autoSavePredictionInFlight) return;
+  autoSavePredictionInFlight = true;
+
+  try {
+    recalculateStandings();
+    const payload = BracketShare.payloadFromSimulatorState(state);
+    const nickname = getOrCreateAutoNickname();
+    const result = await SupabaseBracket.submitBracket(nickname, payload, TEAMS_DB);
+
+    if (result.ok) {
+      try {
+        sessionStorage.setItem(SWIPE_AUTO_SAVED_KEY, "1");
+      } catch (_e) {
+        /* ignore */
+      }
+      showToast("Added to community predictions!");
+      void renderLeaderboard();
+    } else {
+      console.warn("Auto-save prediction failed:", result.error);
+    }
+  } catch (err) {
+    console.warn("Auto-save prediction error:", err);
+  } finally {
+    autoSavePredictionInFlight = false;
   }
 }
 
@@ -320,6 +391,7 @@ function resetSwipeStateInMemory() {
 function beginWelcomeScreen() {
   resetSwipeStateInMemory();
   clearSwipeSession();
+  clearAutoSaveSession();
   clearSwipeIntroPending();
 }
 
@@ -327,6 +399,7 @@ function beginWelcomeScreen() {
 function initDefaultState() {
   resetSwipeStateInMemory();
   clearSwipeSession();
+  clearAutoSaveSession();
   clearSwipeProgressStorage();
   clearSwipeIntroPending();
 }
@@ -1249,7 +1322,6 @@ function revealPodiumChampionship() {
       DOM.btnRestartSwipe.style.fontWeight = "700";
     }
     if (DOM.btnShareResults) DOM.btnShareResults.classList.add("hidden");
-    if (DOM.btnSaveLeaderboard) DOM.btnSaveLeaderboard.classList.add("hidden");
     if (DOM.btnUndo) DOM.btnUndo.classList.add("hidden");
     if (DOM.btnReset) DOM.btnReset.classList.add("hidden");
   } else {
@@ -1263,16 +1335,7 @@ function revealPodiumChampionship() {
     if (DOM.btnUndo) DOM.btnUndo.classList.remove("hidden");
     if (DOM.btnReset) DOM.btnReset.classList.remove("hidden");
   }
-  updateSupabaseSaveButton();
-}
-
-function updateSupabaseSaveButton() {
-  if (!DOM.btnSaveLeaderboard) return;
-  const canSave =
-    !state.isViewer &&
-    typeof SupabaseBracket !== "undefined" &&
-    SupabaseBracket.isConfigured();
-  DOM.btnSaveLeaderboard.classList.toggle("hidden", !canSave);
+  void autoSavePredictionToLeaderboard();
 }
 
 function isLegacyKnockoutOnly() {
@@ -1534,49 +1597,27 @@ async function renderLeaderboard() {
     const timeLabel = row.updated_at
       ? new Date(row.updated_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })
       : "";
+    const displayName =
+      (row.payload && typeof row.payload.name === "string" && row.payload.name.trim()) ||
+      row.nickname;
     const link = document.createElement("a");
     link.className = "leaderboard-row";
     link.href = href;
-    link.innerHTML = `
-      <div class="leaderboard-row-main">
-        <span class="leaderboard-nick">@${row.nickname}</span>
-        <span class="leaderboard-champ">${row.champion || "—"}</span>
-      </div>
-      <span class="leaderboard-time">${timeLabel}</span>
-    `;
+    const nickEl = document.createElement("span");
+    nickEl.className = "leaderboard-nick";
+    nickEl.textContent = displayName;
+    const champEl = document.createElement("span");
+    champEl.className = "leaderboard-champ";
+    champEl.textContent = row.champion || "—";
+    const main = document.createElement("div");
+    main.className = "leaderboard-row-main";
+    main.append(nickEl, champEl);
+    const timeEl = document.createElement("span");
+    timeEl.className = "leaderboard-time";
+    timeEl.textContent = timeLabel;
+    link.append(main, timeEl);
     DOM.leaderboardList.appendChild(link);
   });
-}
-
-function saveShareErrorMessage(code) {
-  const map = {
-    wrong_pin: "Wrong PIN for this nickname. Try again or pick another nickname.",
-    invalid_nickname: "Nickname must be 2–20 characters (letters, numbers, underscore).",
-    invalid_pin: "PIN must be exactly 4 digits.",
-    not_configured: "Online save is not configured."
-  };
-  return map[code] || "Could not save bracket.";
-}
-
-function openSwipeSaveShareModal() {
-  if (typeof SupabaseBracket === "undefined" || !SupabaseBracket.isConfigured()) {
-    return false;
-  }
-  if (DOM.saveShareError) {
-    DOM.saveShareError.classList.add("hidden");
-    DOM.saveShareError.textContent = "";
-  }
-  if (DOM.inputSaveNickname) {
-    const seed = state.userName ? SupabaseBracket.normalizeNickname(state.userName) : "";
-    DOM.inputSaveNickname.value = SupabaseBracket.isValidNickname(seed) ? seed : "";
-  }
-  if (DOM.inputSavePin) DOM.inputSavePin.value = "";
-  DOM.saveShareModal?.classList.remove("hidden");
-  return true;
-}
-
-function closeSwipeSaveShareModal() {
-  DOM.saveShareModal?.classList.add("hidden");
 }
 
 function formatUpsetShareLine() {
@@ -1691,45 +1732,6 @@ function bindSharedAndPodiumHandlers() {
     });
   }
 
-  if (DOM.btnSaveLeaderboard) {
-    DOM.btnSaveLeaderboard.addEventListener("click", () => {
-      if (openSwipeSaveShareModal()) return;
-      showToast("Saving predictions is not configured.", true);
-    });
-  }
-
-  if (DOM.btnCloseSaveShare) {
-    DOM.btnCloseSaveShare.addEventListener("click", closeSwipeSaveShareModal);
-  }
-
-  if (DOM.btnSubmitSaveShare) {
-    DOM.btnSubmitSaveShare.addEventListener("click", async () => {
-      const nickname = DOM.inputSaveNickname?.value || "";
-      const pin = DOM.inputSavePin?.value || "";
-      recalculateStandings();
-      const payload = BracketShare.payloadFromSimulatorState(state);
-
-      DOM.btnSubmitSaveShare.disabled = true;
-      const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
-      DOM.btnSubmitSaveShare.disabled = false;
-
-      if (!result.ok) {
-        if (DOM.saveShareError) {
-          DOM.saveShareError.textContent = saveShareErrorMessage(result.error);
-          DOM.saveShareError.classList.remove("hidden");
-        }
-        return;
-      }
-
-      closeSwipeSaveShareModal();
-      const shareUrl =
-        result.url || SupabaseBracket.buildSubmittedBracketUrl(result.nickname, window.location.href);
-      showToast("Bracket saved!");
-      void renderLeaderboard();
-      await performShareResults(shareUrl);
-    });
-  }
-
   if (DOM.btnRefreshLeaderboard) {
     DOM.btnRefreshLeaderboard.addEventListener("click", () => {
       void renderLeaderboard();
@@ -1755,7 +1757,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   void renderLeaderboard();
 
   if (await tryLoadSharedOrSavedBracket()) {
-    updateSupabaseSaveButton();
     return;
   }
 
@@ -1805,8 +1806,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       showToast("Predictor fully reset!");
     }
   });
-
-  updateSupabaseSaveButton();
 
   // Welcome screen name registration
   if (DOM.btnStartPrediction) {

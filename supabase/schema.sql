@@ -13,7 +13,7 @@ create table if not exists public.brackets (
 create index if not exists brackets_updated_at_idx on public.brackets (updated_at desc);
 
 comment on table public.brackets is 'Fan bracket predictions; PIN verified client-side via pin_hash';
-comment on column public.brackets.pin_hash is 'SHA-256 hex digest of 4-digit PIN (see supabase-utils.js hashPin)';
+comment on column public.brackets.pin_hash is 'Shared placeholder hash for all rows (PUBLIC_PIN_HASH in supabase-utils.js); not used for auth';
 comment on column public.brackets.payload is 'BracketShare v2 payload: name, gScores, kScores, kPicks, thirds';
 comment on column public.brackets.champion is 'Denormalized display string for leaderboard, e.g. 🇧🇷 Brazil';
 

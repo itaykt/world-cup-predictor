@@ -1462,11 +1462,10 @@ function closeSaveShareModal() {
 async function submitCurrentBracketOnline() {
   if (!DOM.btnSubmitSaveShare) return;
   const nickname = DOM.inputSaveNickname?.value || "";
-  const pin = DOM.inputSavePin?.value || "";
   const payload = BracketShare.payloadFromSimulatorState(state);
 
   DOM.btnSubmitSaveShare.disabled = true;
-  const result = await SupabaseBracket.submitBracket(nickname, pin, payload, TEAMS_DB);
+  const result = await SupabaseBracket.submitBracket(nickname, payload, TEAMS_DB);
   DOM.btnSubmitSaveShare.disabled = false;
 
   if (!result.ok) {

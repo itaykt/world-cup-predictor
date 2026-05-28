@@ -1,5 +1,5 @@
 /**
- * Supabase bracket submissions (nickname + 4-digit PIN).
+ * Supabase bracket submissions (nickname + shared pin_hash placeholder).
  * Requires @supabase/supabase-js via CDN before this script.
  */
 (function (root, factory) {
@@ -15,6 +15,9 @@
   const SUPABASE_URL = "https://uylamonpjwocaottuaeg.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bGFtb25wandvY2FvdHR1YWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NzU5NTcsImV4cCI6MjA5NTU1MTk1N30.-kAaY7Z8r6Wv2JOUXF6wO4iu59n45xLzPgpUESpXWsI";
   const TABLE = "brackets";
+  /** SHA-256 of "wc2026_public" — same value for every row (no user PINs). */
+  const PUBLIC_PIN_HASH =
+    "c8b3276dc31e1f6b92d000f2b431ffa0eed59c8f70147f45c7f9179e19a3f589";
   let client = null;
 
   function getSupabaseLib() {
@@ -98,7 +101,7 @@
     return url.href;
   }
 
-  async function submitBracket(nickname, pin, payload, teamsDb) {
+  async function submitBracket(nickname, payload, teamsDb) {
     if (!client) {
       return { ok: false, error: "not_configured" };
     }
@@ -107,34 +110,18 @@
     if (!isValidNickname(nick)) {
       return { ok: false, error: "invalid_nickname" };
     }
-    if (!isValidPin(pin)) {
-      return { ok: false, error: "invalid_pin" };
-    }
     if (!payload || typeof payload !== "object") {
       return { ok: false, error: "invalid_payload" };
     }
 
-    const pinHash = await hashPin(pin);
     const champion = championFromPayload(payload, teamsDb);
-
-    const { data: existing, error: fetchError } = await client
-      .from(TABLE)
-      .select("nickname, pin_hash")
-      .eq("nickname", nick)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("SupabaseBracket submit fetch:", fetchError);
-      return { ok: false, error: fetchError.message || "fetch_failed" };
-    }
-
-    if (existing && existing.pin_hash !== pinHash) {
-      return { ok: false, error: "wrong_pin" };
+    if (!champion) {
+      return { ok: false, error: "no_champion" };
     }
 
     const row = {
       nickname: nick,
-      pin_hash: pinHash,
+      pin_hash: PUBLIC_PIN_HASH,
       payload,
       champion,
       updated_at: new Date().toISOString()
@@ -190,7 +177,7 @@
 
     const { data, error } = await client
       .from(TABLE)
-      .select("nickname, champion, updated_at")
+      .select("nickname, champion, updated_at, payload")
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -231,6 +218,7 @@
     isValidNickname,
     isValidPin,
     hashPin,
+    PUBLIC_PIN_HASH,
     championFromPayload,
     extractBracketNicknameFromPage,
     buildSubmittedBracketUrl,

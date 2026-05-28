@@ -27,6 +27,13 @@ describe("SupabaseBracket.isValidNickname / isValidPin", () => {
   });
 });
 
+describe("SupabaseBracket.PUBLIC_PIN_HASH", () => {
+  it("matches hash of wc2026_public", async () => {
+    const h = await SupabaseBracket.hashPin("wc2026_public");
+    expect(SupabaseBracket.PUBLIC_PIN_HASH).toBe(h);
+  });
+});
+
 describe("SupabaseBracket.hashPin", () => {
   it("returns stable SHA-256 hex", async () => {
     const a = await SupabaseBracket.hashPin("1234");

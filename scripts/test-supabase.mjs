@@ -33,7 +33,6 @@ if (!SupabaseBracket.isConfigured()) {
 const args = process.argv.slice(2);
 const doSubmit = args[0] === "--submit";
 const nickname = args[1] || "smoke_test";
-const pin = args[2] || "9999";
 
 const samplePayload = {
   name: "Smoke Test",
@@ -51,8 +50,7 @@ const teamsDb = {
 async function main() {
   if (doSubmit) {
     console.log(`Submitting bracket as "${nickname}"…`);
-    console.log("nick:", JSON.stringify(nickname), "pin:", JSON.stringify(pin));
-    const sub = await SupabaseBracket.submitBracket(nickname, pin, samplePayload, teamsDb);
+    const sub = await SupabaseBracket.submitBracket(nickname, samplePayload, teamsDb);
     if (!sub.ok) {
       console.error("submitBracket failed:", sub.error);
       process.exit(1);
@@ -80,17 +78,7 @@ async function main() {
     }
     console.log("getBracket ok, champion:", got.champion);
 
-    console.log("wrong PIN test…");
-    const bad = await SupabaseBracket.submitBracket(nickname, "0000", samplePayload, teamsDb);
-    if (bad.ok) {
-      console.error("Expected wrong_pin rejection, got success");
-      process.exit(1);
-    }
-    if (bad.error !== "wrong_pin") {
-      console.error("Expected wrong_pin, got:", bad.error);
-      process.exit(1);
-    }
-    console.log("wrong_pin rejected as expected");
+    console.log("public pin_hash:", SupabaseBracket.PUBLIC_PIN_HASH.slice(0, 12) + "…");
   }
 
   console.log("\nAll checks passed.");
